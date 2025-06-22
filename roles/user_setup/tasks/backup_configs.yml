@@ -35,5 +35,6 @@
           but the destination file {{ new_backup_path }} does NOT exist.
           This points to a fundamental issue with the copy operation on this host.
       when: not verify_backup_stat.stat.exists
+
 #     prompt: "Backup for {{ config_file }} is complete. The backup directory should now contain a file. Press Enter to continue to the next file."
 #   when: source_file_stat.stat.exists and source_file_stat.stat.isreg

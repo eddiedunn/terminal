@@ -1,0 +1,3 @@
+---
+# ansible-lint configuration file for tool_installer role
+skip_list: []
