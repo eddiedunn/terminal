@@ -63,7 +63,7 @@
 - name: "Filter for symlinks managed by '{{ repo.name }}' repo"
   ansible.builtin.set_fact:
     managed_symlinks: "{{ found_existing_symlinks.files | selectattr('lnk_target', 'defined') | selectattr('lnk_target', 'startswith', repo_src_path) | list }}"
-  ignore_errors: yes
+  failed_when: false
 
 # 4. Prune obsolete symlinks: Delete any link that exists but is no longer in the desired list.
 - name: "Prune obsolete symlinks for '{{ repo.name }}'"

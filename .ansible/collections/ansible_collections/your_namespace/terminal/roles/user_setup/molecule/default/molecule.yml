@@ -19,9 +19,9 @@ platforms:
       # Configure Ansible settings
       ANSIBLE_REMOTE_TEMP: /tmp/ansible
       ANSIBLE_REMOTE_USER: root
-      ANSIBLE_RETRY_FILES_ENABLED: 'False'
+      ANSIBLE_RETRY_FILES_ENABLED: false
       # Disable pipelining to avoid potential issues
-      ANSIBLE_PIPELINING: 'False'
+      ANSIBLE_PIPELINING: false
       # Enable color output
       ANSIBLE_FORCE_COLOR: '1'
 

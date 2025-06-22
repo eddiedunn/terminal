@@ -17,7 +17,6 @@ user_setup_enabled: true
 user_setup_staging_dir: "{{ ansible_env.HOME }}/.local/staging"
 user_setup_bin_dir: "{{ ansible_env.HOME }}/.local/bin"
 user_setup_shell_type: "bash" # This is overridden to 'zsh' automatically on macOS by tasks/main.yml
-user_setup_managed_block_marker: "# {mark} ANSIBLE MANAGED BLOCK (terminal_setup)"
 user_setup_deploy_config_yaml: false
 
 # --- Master Tool Definitions (Role-Internal) ---

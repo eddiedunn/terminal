@@ -26,6 +26,7 @@
     label: "{{ item.name }} -> {{ item.symlink_as }}"
   when:
     - item.binaries is defined
+    -# (Line 24 broken up for readability)
     - item.binaries | length > 0
 
 - name: Remove symlinks for absent tools
