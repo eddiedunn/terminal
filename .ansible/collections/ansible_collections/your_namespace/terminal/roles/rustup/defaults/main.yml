@@ -1,3 +1,0 @@
----
-# defaults file for your_namespace.terminal.rustup
-rustup_install_url: "https://sh.rustup.rs"
