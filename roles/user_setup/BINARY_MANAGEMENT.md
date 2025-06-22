@@ -1,16 +1,20 @@
 # Terminal Setup Role: Binary & Extras Management Design
 
 ## Overview
-This document describes the unified, extensible system for managing CLI tool binaries, completions, and auxiliary files in the `terminal_setup` Ansible role. The design enables fully automated, rootless, cross-platform installation for a wide variety of tools—regardless of how their upstream releases are structured.
+This document describes the actual, current system for managing CLI tool binaries and completions in the modular Ansible collection. The system is fully automated, rootless, and cross-platform, and is now split into two main data sources:
+
+- **Binaries:** Defined in `defaults/main.yml` for each tool, per OS/arch, with download/extract rules.
+- **Completions:** Defined centrally in `files/completions_metadata.yml` for each tool and shell, with download/generation rules.
+
+The `download_helper.py` script orchestrates both binaries and completions, staging all necessary files in the role's `files/` directory for later installation by the role.
 
 ---
 
-## Data Model: Tool Definition Schema (YAML)
-Each tool is defined in `defaults/main.yml` using a flexible schema supporting:
-- **Binaries:** Main executables, per OS/arch, with custom download/extract rules.
-- **Completions & Extras:** Per-shell or per-purpose auxiliary files, each with custom download/extract rules.
+## Data Model: Binaries and Completions
 
-### Tool YAML Example
+### Binaries (in `defaults/main.yml`)
+Each tool is defined with a flexible schema, for example:
+
 ```yaml
 - name: sheldon
   version: "0.8.2"
@@ -22,22 +26,44 @@ Each tool is defined in `defaults/main.yml` using a flexible schema supporting:
         url: "https://github.com/rossmacarthur/sheldon/releases/download/0.8.2/sheldon-0.8.2-aarch64-apple-darwin.tar.gz"
         executable_in_archive: "sheldon"
         checksum: "..."
-  completions:
-    bash:
-      source: "completions/sheldon.bash"
-      dest: ".local/share/bash-completion/completions/sheldon"
+```
+
+### Completions (in `files/completions_metadata.yml`)
+Completions are NOT embedded in the tool YAML. Instead, they are defined in a dedicated metadata file, for example:
+
+```yaml
+completions:
+  - name: zoxide
     zsh:
-      url: "https://github.com/rossmacarthur/sheldon/releases/download/0.8.2/sheldon-completions.tar.gz"
-      archive_type: "tar.gz"
-      executable_in_archive: "sheldon.zsh"
-      dest: ".zsh/completions/_sheldon"
-  extras:
-    man:
-      url: "https://github.com/rossmacarthur/sheldon/releases/download/0.8.2/sheldon.1.gz"
-      dest: ".local/share/man/man1/sheldon.1.gz"
+      method: cli
+      command: "zoxide init zsh --cmd z"
+      output: "zoxide.zsh"
+    bash:
+      method: cli
+      command: "zoxide init bash --cmd z"
+      output: "zoxide.bash"
 ```
 
 ---
+
+## Download & Staging Process
+- The `download_helper.py` script reads `defaults/main.yml` and `completions_metadata.yml`.
+- Binaries are downloaded and extracted as specified.
+- Completions are downloaded or generated (via CLI or URL) as specified.
+- All files are staged in `roles/<role>/files/` for later copying by the Ansible role.
+
+---
+
+## Installation Process
+- The Ansible role copies binaries from staged files to the user's `~/.local/bin/`.
+- Completions are copied from staged files to the user's completions directory (e.g., `~/.zsh/completions`).
+
+---
+
+## Notes
+- All logic is now data-driven and split between binaries (main.yml) and completions (completions_metadata.yml).
+- No completions/extras are embedded in the main tool YAML.
+- Documentation and implementation are now aligned.
 
 ## Supported Keys
 ### Binaries

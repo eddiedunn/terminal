@@ -31,13 +31,6 @@
     file_type: file
   register: found_desired_scripts
   
-- name: Show directory being searched
-  ansible.builtin.debug:
-    msg: "Searching for scripts in: {{ repo_script_path }}"
-
-- name: Show found scripts
-  ansible.builtin.debug:
-    msg: "Found {{ found_desired_scripts.files | length }} executable scripts in {{ repo_script_path }}"
 
 - name: List found script files
   ansible.builtin.debug:

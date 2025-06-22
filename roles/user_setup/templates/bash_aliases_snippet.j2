@@ -18,11 +18,3 @@ alias {{ alias_name }}='{{ alias_cmd }}'
 alias {{ alias_name }}='{{ alias_cmd }}'
 {% endfor %}
 {% endif %}
-
-# --- Custom User Aliases ---
-{% if terminal_setup_custom_aliases is defined and terminal_setup_custom_aliases %}
-# User-defined ad-hoc aliases
-{% for alias_name, alias_cmd in terminal_setup_custom_aliases.items() %}
-alias {{ alias_name }}='{{ alias_cmd }}'
-{% endfor %}
-{% endif %}

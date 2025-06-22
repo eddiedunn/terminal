@@ -68,8 +68,6 @@
         src: "zsh_aliases_snippet.j2"
         dest: "{{ ansible_user_dir }}/.zsh_aliases"
         mode: "0644"
-  ansible.builtin.meta: end_play
-  when: terminal_setup_profile_tools | length == 0
 
 # ---- 2. Backup and Directory Setup ----
 

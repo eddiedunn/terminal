@@ -29,7 +29,7 @@ The official `eza-community/eza` project does **not** distribute pre-built Darwi
 - **Rebuilding:** If you prefer to build your own binaries, you can do so by following the instructions in the fork or the official repo, then replacing the binary in the appropriate files directory.
 - **Security & Trust:** This approach is documented here to ensure transparency. If/when the official project begins distributing Darwin binaries, this project will switch to using those official releases.
 
-For details on how binaries are managed, see `BINARY_MANAGEMENT.md` and the helper automation scripts included in the repository.
+For details on how binaries and completions are managed, see `BINARY_MANAGEMENT.md`, `COMPLETIONS_WORKFLOW.md`, and the helper automation scripts included in the repository.
 
 ## Quickstart
 1. Clone the repo
@@ -38,6 +38,12 @@ For details on how binaries are managed, see `BINARY_MANAGEMENT.md` and the help
    python3 -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
+3. Stage all required binaries and completions by running:
+   ```sh
+   python3 roles/user_setup/scripts/download_helper.py roles/user_setup
+   ```
+   This will read `defaults/main.yml` and `files/completions_metadata.yml`, download all binaries, and stage completions for all supported shells.
+   - As of the current implementation, for zoxide, any 'eval' lines are stripped from the generated zoxide.zsh completion file to avoid double initialization.
    ```
 3. Run molecule/ansible/pytest commands as needed (with the venv activated)
 

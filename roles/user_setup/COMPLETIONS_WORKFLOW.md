@@ -1,12 +1,12 @@
 # Completions Workflow for `terminal_setup` Role
 
-This document explains how shell completions are managed in this role for Zsh, Bash, and Fish in a reproducible, userland-friendly way.
+This document explains how shell completions are managed in this role for Zsh, Bash, and Fish in a reproducible, userland-friendly way, using a dedicated completions metadata file and a download helper script.
 
 ---
 
 ## Overview
 
-- **Completions for supported tools are staged during the download step** (using the download helper script and completions_metadata.yml).
+- **Completions for supported tools are staged during the download step** using `files/completions_metadata.yml` and the `download_helper.py` script.
 - **The Ansible role then copies these pre-populated completions** into the user's completions directory at install time.
 - **No completions are generated or extracted at runtime**—everything is staged and idempotent.
 
@@ -15,16 +15,18 @@ This document explains how shell completions are managed in this role for Zsh, B
 ## How It Works
 
 ### 1. Download Step
-- Run the download playbook (e.g., `ansible-playbook playbooks/terminal_setup_download_binaries.yml`).
-- This will:
-  - Download all required binaries.
+- Edit `files/completions_metadata.yml` to add or update completions for any tool or shell.
+- Run the download helper script (e.g., `python3 roles/user_setup/scripts/download_helper.py roles/user_setup`).
+- The script will:
+  - Download all required binaries (from `defaults/main.yml`).
   - Parse `files/completions_metadata.yml` for completions for each tool and shell.
   - For each completion:
-    - If `method: cli`, runs the CLI to generate the completion script.
+    - If `method: cli`, runs the CLI to generate the completion script (e.g., `zoxide init zsh --cmd z`).
     - If `method: url`, downloads the completion script from the upstream URL.
     - If `method: archive`, (future) will extract from the tool's archive.
     - If `method: plugin` or `none`, does nothing (handled by plugin manager or not needed).
-  - Stages all completions in `roles/terminal_setup/files/completions/<shell>/`.
+  - Stages all completions in `roles/user_setup/files/completions/<shell>/`.
+  - As of the current implementation, for zoxide, any 'eval' lines are stripped from the generated zoxide.zsh completion file to avoid double initialization.
 
 ### 2. Role Install Step
 - When the main role is run, it copies the staged completions from `files/completions/<shell>/` to the user's completions directory:
@@ -35,9 +37,10 @@ This document explains how shell completions are managed in this role for Zsh, B
 
 ---
 
-## Adding or Updating Completions
-- Edit `files/completions_metadata.yml` to add or update completions for any tool or shell.
-- Rerun the download playbook to re-stage completions.
+## Summary
+- Completions are managed via `completions_metadata.yml` and staged by `download_helper.py`.
+- No completions are embedded in the tool YAML or generated at runtime.
+- All logic is data-driven and extensible.
 - The main role will pick up any new completions automatically at install time.
 
 ---

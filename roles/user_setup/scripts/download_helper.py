@@ -320,8 +320,17 @@ class Downloader:
                                 env["PATH"] = f"{os.path.dirname(staged_bin)}:{env['PATH']}"
                                 print(f"[COMPLETIONS][CLI] Using staged binary: {staged_bin}")
                             result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-                            with open(out_path, "wb") as outf:
-                                outf.write(result.stdout)
+                            if tool == "zoxide" and shell == "zsh" and output == "zoxide.zsh":
+                                content = result.stdout.decode("utf-8")
+                                filtered = "\n".join(
+                                    line for line in content.splitlines()
+                                    if not (line.strip().startswith("eval ") or "zoxide init" in line)
+                                )
+                                with open(out_path, "w", encoding="utf-8") as outf:
+                                    outf.write(filtered)
+                            else:
+                                with open(out_path, "wb") as outf:
+                                    outf.write(result.stdout)
                             self.changed = True
                         except Exception as e:
                             print(f"[COMPLETIONS][ERROR] Failed to generate completion for {tool} ({shell}): {e}", file=sys.stderr)
