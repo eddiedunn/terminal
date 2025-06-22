@@ -330,11 +330,6 @@ To disable the role entirely (no-op):
 
 After running the playbook, users will need to log out and log back in, or source their `~/.bashrc` or `~/.zshrc` for the changes to take effect.
 
-## Helper Playbook for Downloading Binaries (Controller-Side)
-
-A sample playbook `playbooks/download_role_binaries.yml.example` might look like this:
-
-```yaml
 # playbooks/download_role_binaries.yml.example
 # Run this playbook on your Ansible controller to download binaries.
 ---

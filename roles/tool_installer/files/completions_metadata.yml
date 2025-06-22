@@ -52,14 +52,28 @@ completions:
       method: cli
       command: "zoxide init zsh --cmd z"
       output: "zoxide.zsh"
+      post_process:
+        - type: "remove_lines_with_patterns"
+          patterns:
+            - "eval "
+            - "zoxide init"
     bash:
       method: cli
       command: "zoxide init bash --cmd z"
       output: "zoxide.bash"
+      post_process:
+        - type: "remove_lines_with_patterns"
+          patterns:
+            - "eval "
+            - "zoxide init"
     fish:
       method: cli
       command: "zoxide init fish --cmd z"
       output: "zoxide.fish"
+      post_process:
+        - type: "remove_lines_with_patterns"
+          patterns:
+            - "zoxide init"
   - name: direnv
     zsh:
       method: none
