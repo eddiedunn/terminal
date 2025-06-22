@@ -55,14 +55,31 @@ To include this collection in your own Ansible repository:
    ```
 
    - If using locally, set `source` to the relative or absolute path.
-   - To install directly from this repository, use the following URL for the `source` field:
-     
+   - **To install directly from this repository (development or private use):**
+     1. Clone the repository:
+        ```sh
+        git clone https://github.com/eddiedunn/terminal.git
+        ```
+     2. Build and install the collection:
+        ```sh
+        ansible-galaxy collection build terminal
+        ansible-galaxy collection install eddiedunn-terminal-*.tar.gz
+        ```
+   - **To install directly from git (if using Ansible 2.10+):**
+     ```sh
+     ansible-galaxy collection install git+https://github.com/eddiedunn/terminal.git
+     ```
+     > **Note:** This method cannot be used in `collections/requirements.yml` unless the repo is structured and tagged for Galaxy.
+   - **If publishing to Ansible Galaxy:**
+     Publish the collection, then users can add to `collections/requirements.yml`:
      ```yaml
      collections:
        - name: eddiedunn.terminal
-         source: https://github.com/eddiedunn/terminal.git
      ```
-   - If publishing to Ansible Galaxy, use the Galaxy namespace and collection name.
+     and install with:
+     ```sh
+     ansible-galaxy collection install -r collections/requirements.yml
+     ```
 
 2. **Install the collection:**
 
