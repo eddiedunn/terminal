@@ -40,11 +40,11 @@ If you include `rustup` in your `terminal_setup_profile_tools` list, the role wi
 
 ## Ad-Hoc Script Management (via Git)
 
-This role supports installing your own personal scripts from one or more Git repositories. This is the recommended way to manage your private scripts (like those in your `gdunn6_global_scripts` repo) without adding them directly to this Ansible role.
+This role supports installing your own personal scripts from one or more Git repositories. This is the recommended way to manage your private scripts (like those in your `my_personal_scripts` repo) without adding them directly to this Ansible role.
 
 To use this feature, define the `terminal_setup_script_repos` variable in your playbook. It should be a list of dictionaries, where each dictionary has the following keys:
 
--   **`name`**: A unique name for the repository (used for the local cache directory, e.g., `my_scripts`).
+-   **`name`**: A unique name for the repository (used for the local cache directory, e.g., `my_personal_scripts`).
 -   **`repo`**: The SSH or HTTPS URL of the Git repository.
 -   **`path_in_repo`** (optional): The subdirectory within the repo that contains your scripts. Defaults to `scripts`.
 -   **`version`** (optional): The branch, tag, or commit to check out. Defaults to `main`.
@@ -264,8 +264,8 @@ To configure a minimal setup for a server **with custom aliases and scripts from
           kgp: "kubectl get pods -A"
           ".." : "cd .."
         terminal_setup_script_repos:
-          - name: "gdunn6_global_scripts"
-            repo: "https://github.com/user/my-scripts.git"
+          - name: "my_personal_scripts"
+            repo: "https://github.com/user/personal-scripts.git"
             path_in_repo: "scripts"
             version: "main"
 ```

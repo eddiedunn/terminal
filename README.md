@@ -16,6 +16,21 @@ This is required for all development, testing, and CI. If you skip this step, co
 - Modular Ansible roles: `user_setup`, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
 - Collection metadata: `galaxy.yml`, `.gitignore`
 
+---
+
+## Binary Management Philosophy & eza Darwin Binaries
+
+This project includes pre-built binaries for several tools to ensure reproducible, offline, and cross-platform automation. One notable case is the inclusion of a Darwin (macOS) binary for [`eza`](https://github.com/eza-community/eza), a modern replacement for `ls`.
+
+### Why a Custom Fork for eza?
+The official `eza-community/eza` project does **not** distribute pre-built Darwin/macOS binaries. To provide a seamless experience for macOS users, this project uses a custom fork ([eddiedunn/eza](https://github.com/eddiedunn/eza)) to build and distribute the required Darwin binaries.
+
+- **Transparency:** The source and build process for these binaries are publicly available. Users are encouraged to review the [eddiedunn/eza](https://github.com/eddiedunn/eza) fork and compare it with the official [eza-community/eza](https://github.com/eza-community/eza).
+- **Rebuilding:** If you prefer to build your own binaries, you can do so by following the instructions in the fork or the official repo, then replacing the binary in the appropriate files directory.
+- **Security & Trust:** This approach is documented here to ensure transparency. If/when the official project begins distributing Darwin binaries, this project will switch to using those official releases.
+
+For details on how binaries are managed, see `BINARY_MANAGEMENT.md` and the helper automation scripts included in the repository.
+
 ## Quickstart
 1. Clone the repo
 2. Create and activate the virtual environment (if not already present):
