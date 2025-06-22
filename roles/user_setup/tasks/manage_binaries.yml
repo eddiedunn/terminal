@@ -14,7 +14,7 @@
           {{ role_path }}/files/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ tool.name }}/{{ tool.version }}/
           {{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
         tool_dest_path: >-
-          {{ ansible_user_dir }}/.local/bin/{{ tool.executable_name | default(tool.name) }}
+          {{ ansible_user_dir }}/.local/bin/{{ tool_executable }}
 
     - name: "Check if pre-downloaded binary exists for {{ tool.name }}"
       ansible.builtin.stat:
@@ -25,10 +25,10 @@
       ansible.builtin.debug:
         var: tool_bin_stat
 
-    - name: "Fail if binary is not present for {{ tool.name }} on {{ tool_os }}/{{ tool_arch }}"
+    - name: "Fail if binary is not present"
       ansible.builtin.fail:
         msg: |
-          Binary for {{ tool.name }} (version {{ tool_version }}) not found at {{ tool_bin_path }}.
+          Binary for {{ tool.name }} (version {{ tool_version }}) not found at {{ tool_bin_path }} for {{ tool_os }}/{{ tool_arch }}.
           Please run the download helper or place the binary manually.
       when: not tool_bin_stat.stat.exists
 
@@ -39,7 +39,7 @@
           - "tool_bin_path: {{ tool_bin_path }}"
           - "tool_dest_path: {{ tool_dest_path }}"
 
-    - name: "Copy {{ tool.name }} binary to user's bin directory"
+    - name: "Copy binary to user's bin directory for {{ tool.name }}"
       ansible.builtin.copy:
         src: "{{ tool_bin_path }}"
         dest: "{{ tool_dest_path }}"

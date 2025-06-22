@@ -1,7 +1,14 @@
 ---
-- name: "Install rustup (if not present)"
-  ansible.builtin.shell: |
-    curl --proto '=https' --tlsv1.2 -sSf {{ rustup_install_url }} | sh -s -- -y
+- name: Download rustup-init script
+  ansible.builtin.get_url:
+    url: "{{ rustup_install_url }}"
+    dest: "/tmp/rustup-init.sh"
+    mode: '0755'
+    force: true
+
+- name: Install rustup (if not present)
+  ansible.builtin.command:
+    cmd: "/tmp/rustup-init.sh -y"
   args:
     creates: "{{ ansible_user_dir }}/.cargo/bin/rustup"
 

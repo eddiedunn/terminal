@@ -14,7 +14,7 @@
     mode: '0644'
   register: sheldon_config_updated
 
-- name: Update Sheldon lock file if config changed
+- name: Update Sheldon lock file
   ansible.builtin.command:
     cmd: sheldon lock --update
     chdir: "{{ ansible_user_dir }}"
@@ -25,6 +25,7 @@
   changed_when: sheldon_lock_updated.rc == 0
   failed_when: sheldon_lock_updated.rc != 0
   become: false
+  # noqa: no-handler
 
 - name: Set Sheldon lock file permissions
   ansible.builtin.file:

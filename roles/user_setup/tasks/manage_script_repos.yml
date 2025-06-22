@@ -30,8 +30,6 @@
     patterns: '*'
     file_type: file
   register: found_desired_scripts
-  
-
 - name: List found script files
   ansible.builtin.debug:
     var: item.path
@@ -53,13 +51,13 @@
   register: found_existing_symlinks
 
 # 3. Filter the existing symlinks to only those managed by THIS repo.
-- name: "Filter for symlinks managed by '{{ repo.name }}' repo"
+- name: Filter symlinks managed by repo {{ repo.name }}
   ansible.builtin.set_fact:
     managed_symlinks: "{{ found_existing_symlinks.files | selectattr('lnk_target', 'defined') | selectattr('lnk_target', 'startswith', repo_src_path) | list }}"
   failed_when: false
 
 # 4. Prune obsolete symlinks: Delete any link that exists but is no longer in the desired list.
-- name: "Prune obsolete symlinks for '{{ repo.name }}'"
+- name: Prune obsolete symlinks for repo {{ repo.name }}
   ansible.builtin.file:
     path: "{{ managed_link.path }}"
     state: absent
@@ -70,7 +68,7 @@
   when: (managed_link.path | basename) not in desired_script_names
 
 # 5. Create or update symlinks for all desired scripts.
-- name: "Link desired scripts from '{{ repo.name }}' to {{ terminal_setup_bin_dir }}"
+- name: Link scripts to bin dir for repo
   ansible.builtin.file:
     src: "{{ desired_script.path }}"
     dest: "{{ terminal_setup_bin_dir }}/{{ desired_script.path | basename }}"

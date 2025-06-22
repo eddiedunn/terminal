@@ -23,21 +23,37 @@
   become: true
 
 - name: Set apt package list for requested tools
-  set_fact:
+  ansible.builtin.set_fact:
     system_dependencies_apt_packages: "{{ system_dependencies_tools | map('extract', system_dependencies_apt_map) | list | flatten | unique }}"
   vars:
     system_dependencies_apt_map:
-      nvm: [ 'build-essential', 'libssl-dev', 'curl' ]
-      pyenv: [ 'make', 'build-essential', 'libssl-dev', 'zlib1g-dev', 'libbz2-dev', 'libreadline-dev', 'libsqlite3-dev', 'wget', 'curl', 'llvm', 'libncurses5-dev', 'libncursesw5-dev', 'xz-utils', 'tk-dev', 'libffi-dev', 'liblzma-dev' ]
-      rustup: [ 'curl', 'build-essential' ]
+      nvm: ['build-essential', 'libssl-dev', 'curl']
+      pyenv:
+        - make
+        - build-essential
+        - libssl-dev
+        - zlib1g-dev
+        - libbz2-dev
+        - libreadline-dev
+        - libsqlite3-dev
+        - wget
+        - curl
+        - llvm
+        - libncurses5-dev
+        - libncursesw5-dev
+        - xz-utils
+        - tk-dev
+        - libffi-dev
+        - liblzma-dev
+      rustup: ['curl', 'build-essential']
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Set brew package list for requested tools
-  set_fact:
+  ansible.builtin.set_fact:
     system_dependencies_brew_packages: "{{ system_dependencies_tools | map('extract', system_dependencies_brew_map) | list | flatten | unique }}"
   vars:
     system_dependencies_brew_map:
-      nvm: [ 'nvm' ]
-      pyenv: [ 'pyenv' ]
-      rustup: [ 'rustup-init' ]
+      nvm: ['nvm']
+      pyenv: ['pyenv']
+      rustup: ['rustup-init']
   when: ansible_facts['os_family'] == 'Darwin'

@@ -6,13 +6,13 @@
       {{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
     tool_bin_dest: "{{ ansible_user_dir }}/.local/bin/{{ tool_executable_name | default(tool.name) }}"
 
-- name: "Check if pre-downloaded binary exists for {{ tool.name }}"
+- name: "Check if pre-downloaded binary exists"
   ansible.builtin.stat:
     path: "{{ tool_bin_src }}"
   register: tool_bin_stat
   delegate_to: localhost
 
-- name: "Copy {{ tool.name }} binary to user's bin directory"
+- name: "Copy binary to user's bin directory for {{ tool.name }}"
   ansible.builtin.copy:
     src: "{{ tool_bin_src }}"
     dest: "{{ tool_bin_dest }}"

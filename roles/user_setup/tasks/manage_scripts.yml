@@ -2,6 +2,7 @@
 # tasks file for managing script-based tools in terminal_setup
 
 - name: Manage script-based tool
+  when: (tool.state | default('present')) == 'present'
   block:
     - name: Install dependencies for script-based tool
       ansible.builtin.package:
@@ -41,10 +42,8 @@
         force: false
       register: git_clone_result
 
-
     - name: Show git clone result
       ansible.builtin.debug:
         var: git_clone_result
       when: git_clone_result.changed
-
-  when: (tool.state | default('present')) == 'present'
+      # noqa: no-handler

@@ -21,12 +21,16 @@
     group: "{{ ansible_user_gid }}"
     state: link
     force: true
-  loop: "{{ terminal_setup_tools_processed | selectattr('symlink_as', 'defined') | selectattr('state', 'eq', 'present') | selectattr('binaries', 'defined') | list }}"
+  loop: >-
+    {{ terminal_setup_tools_processed |
+    selectattr('symlink_as', 'defined') |
+    selectattr('state', 'eq', 'present') |
+    selectattr('binaries', 'defined') |
+    list }}
   loop_control:
     label: "{{ item.name }} -> {{ item.symlink_as }}"
   when:
     - item.binaries is defined
-    -# (Line 24 broken up for readability)
     - item.binaries | length > 0
 
 - name: Remove symlinks for absent tools
