@@ -9,15 +9,38 @@ It is responsible for setting up the foundational user environment, including:
 - Sourcing a standard directory (`~/.config/shell_init.d`) where other roles can place initialization scripts.
 - Managing custom user-defined aliases and environment variables.
 
+## IMPORTANT: Override Git User/Email
+
+By default, this role sets generic values for Git user/email:
+
+- `user_setup_git_email: "user@example.com"`
+- `user_setup_git_name: "Ansible User"`
+
+**You MUST override these in your own playbooks to ensure your commits and configuration reflect your personal or organizational identity.**
+
+Example (in your playbook or inventory):
+
+```yaml
+- hosts: all
+  roles:
+    - role: user_setup
+      vars:
+        user_setup_git_email: "your.email@domain.com"
+        user_setup_git_name: "Your Name"
+```
+
+---
+
 ## Role Variables
 
 - `user_setup_custom_aliases`: A dictionary of aliases to add.
 - `user_setup_environment_variables`: A dictionary of environment variables to set.
+- `user_setup_install_dependencies`: *(optional, default: false, commented out)* If enabled in the future, this will allow the role to install system dependencies. **Currently not used.**
 
 **Usage:**
 - To enable, add `nvm` and/or `pyenv` to your `terminal_setup_profile_tools`.
 - After running the playbook, use `nvm install <version>` / `nvm use <version>` for Node.js, and `pyenv install <version>` / `pyenv global <version>` for Python.
-- All setup is user-local; no root is required except for installing system dependencies.
+- All setup is user-local; no root is required. System dependencies are NOT installed by default.
 
 This mechanism is extensible to other tools that are installed via git clone and shell integration.
 
@@ -27,14 +50,38 @@ This mechanism is extensible to other tools that are installed via git clone and
 
 If you include `rustup` in your `terminal_setup_profile_tools` list, the role will:
 
-1.  **Install all required system-level build dependencies** for the target OS (Debian/Ubuntu via `apt`, macOS via `brew`). This step uses `become: true`.
-2.  **Download and execute the official `rustup-init.sh` script**, installing `rustup`, `cargo`, `rustc`, and the standard toolchain into the user's home directory (`~/.rustup` and `~/.cargo`).
-3.  **Ensure `~/.cargo/bin` is added to the `PATH`** in your shell configuration files, making all Rust tools available in new shell sessions.
+1.  **Download and execute the official `rustup-init.sh` script**, installing `rustup`, `cargo`, `rustc`, and the standard toolchain into the user's home directory (`~/.rustup` and `~/.cargo`).
+2.  **Ensure `~/.cargo/bin` is added to the `PATH`** in your shell configuration files, making all Rust tools available in new shell sessions.
 
-**Usage:**
-- To enable, add `rustup` to your `terminal_setup_profile_tools`.
-- After running the playbook, use `cargo build`, `rustc`, etc. You can manage toolchains with `rustup toolchain install nightly`.
-- All setup is user-local; no root is required except for installing system dependencies.
+> **Note:** This role does NOT install system-level build dependencies (such as compilers or development libraries) by default. You must ensure these are present using your own playbook logic, or see the new `system_dependencies` role below.
+
+---
+
+## System Dependencies (New Modular Role)
+
+This collection now provides a dedicated role, `system_dependencies`, for automated installation of system-level dependencies required by tools such as nvm, pyenv, and rustup. This role can be used independently or alongside `user_setup`.
+
+**Example usage:**
+
+```yaml
+- hosts: all
+  become: true
+  roles:
+    - role: system_dependencies
+      vars:
+        system_dependencies_tools:
+          - nvm
+          - pyenv
+          - rustup
+    - role: user_setup
+      vars:
+        terminal_setup_profile_tools:
+          - nvm
+          - pyenv
+          - rustup
+```
+
+See the `system_dependencies` role README for supported platforms and variables.
 
 ---
 
@@ -61,7 +108,7 @@ The role will clone the repository to `~/.local/src/<name>` and then create syml
     *   Standard utilities like `tar`, `gzip`.
     *   User write access to `~/.local/bin` and `~/.config`.
     *   Architectures supported: `x86_64` and `aarch64` (Apple Silicon).
-    *   For nvm/pyenv: ability to install dependencies via `apt` (Debian/Ubuntu) or `homebrew` (macOS).
+    *   For nvm/pyenv: you must ensure dependencies are installed via `apt` (Debian/Ubuntu) or `homebrew` (macOS) yourself, or by using the `system_dependencies` role.
 *   **Pre-downloaded Binaries:** This role works with pre-downloaded binaries. A helper playbook is included to download all necessary binaries for supported platforms (Linux/macOS) and architectures (`x86_64`/`aarch64`) into the `roles/terminal_setup/files/` directory with the correct naming scheme (e.g., `starship-linux-x86_64`, `sheldon-darwin-aarch64`).
 
 ## Configuration

@@ -5,11 +5,11 @@
     ansible_user_dir: "/home/testuser"
 
   roles:
-    - role: terminal_setup
+    - role: user_setup
       vars:
         # Master switch is off, so no tools should be installed regardless of the tools list
-        terminal_setup_enabled: false
-        terminal_setup_profile_tools:
+        user_setup_enabled: false
+        user_setup_profile_tools:
           - starship
           - sheldon
           - fzf

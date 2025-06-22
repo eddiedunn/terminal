@@ -39,6 +39,29 @@ import yaml
 class Downloader:
     """Handles the download and verification of binaries."""
 
+    def _apply_post_processing(self, content: str, rules: list) -> str:
+        """Applies a list of post-processing rules to string content."""
+        if not rules:
+            return content
+        processed_content = content
+        for rule in rules:
+            rule_type = rule.get("type")
+            if rule_type == "remove_lines_with_patterns":
+                patterns = rule.get("patterns", [])
+                if not patterns:
+                    continue
+                lines = processed_content.splitlines()
+                filtered_lines = [
+                    line for line in lines
+                    if not any(p in line for p in patterns)
+                ]
+                processed_content = "\n".join(filtered_lines)
+            # Add other rule types here in the future, e.g., 'replace_string'
+            # elif rule_type == "replace_string":
+            #     ...
+        return processed_content
+
+
     def __init__(self, role_path: Path):
         self.role_path = role_path
         self.files_dir = self.role_path / "files"
@@ -320,84 +343,16 @@ class Downloader:
                                 env["PATH"] = f"{os.path.dirname(staged_bin)}:{env['PATH']}"
                                 print(f"[COMPLETIONS][CLI] Using staged binary: {staged_bin}")
                             result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-                            if tool == "zoxide" and shell == "zsh" and output == "zoxide.zsh":
-                                content = result.stdout.decode("utf-8")
-                                filtered = "\n".join(
-                                    line for line in content.splitlines()
-                                    if not (line.strip().startswith("eval ") or "zoxide init" in line)
-                                )
-                                with open(out_path, "w", encoding="utf-8") as outf:
-                                    outf.write(filtered)
-                            else:
-                                with open(out_path, "wb") as outf:
-                                    outf.write(result.stdout)
+                            content = result.stdout.decode("utf-8")
+                            post_process_rules = shell_info.get("post_process", [])
+                            if post_process_rules:
+                                print(f"[COMPLETIONS][CLI] Applying post-processing rules for {tool} ({shell})")
+                                content = self._apply_post_processing(content, post_process_rules)
+                            with open(out_path, "w", encoding="utf-8") as outf:
+                                outf.write(content)
                             self.changed = True
                         except Exception as e:
                             print(f"[COMPLETIONS][ERROR] Failed to generate completion for {tool} ({shell}): {e}", file=sys.stderr)
-                    elif method == "url":
-                        url = shell_info.get("url")
-                        if not url or not output:
-                            continue
-                        shell_dir = completions_dir / shell
-                        shell_dir.mkdir(parents=True, exist_ok=True)
-                        out_path = shell_dir / output
-                        print(f"[COMPLETIONS][URL] Downloading {url} for {tool} ({shell}), saving to {out_path}")
-                        try:
-                            urllib.request.urlretrieve(url, out_path)
-                            self.changed = True
-                        except Exception as e:
-                            print(f"[COMPLETIONS][ERROR] Failed to download completion for {tool} ({shell}): {e}", file=sys.stderr)
-                    elif method == "archive":
-                        import platform
-                        os_name = platform.system().lower()
-                        arch = platform.machine().lower()
-                        if arch in ("arm64", "aarch64"):
-                            arch = "aarch64"
-                        elif arch in ("x86_64", "amd64"):
-                            arch = "x86_64"
-                        version = entry.get("version")
-                        tool_name = entry.get("name")
-                        tool_dir = self.files_dir / os_name / arch / tool_name / str(version)
-                        if not tool_dir.exists():
-                            print(f"[COMPLETIONS][ARCHIVE][ERROR] Tool dir not found: {tool_dir}", file=sys.stderr)
-                            continue
-                        archive_candidates = list(tool_dir.glob("*.zip")) + list(tool_dir.glob("*.tar.gz")) + list(tool_dir.glob("*.tgz"))
-                        if not archive_candidates:
-                            print(f"[COMPLETIONS][ARCHIVE][ERROR] No archive found for {tool} in {tool_dir}", file=sys.stderr)
-                            continue
-                        archive_path = archive_candidates[0]
-                        file_in_archive = shell_info.get("archive_path")
-                        if not file_in_archive or not output:
-                            continue
-                        shell_dir = completions_dir / shell
-                        shell_dir.mkdir(parents=True, exist_ok=True)
-                        out_path = shell_dir / output
-                        print(f"[COMPLETIONS][ARCHIVE] Extracting {file_in_archive} from {archive_path} for {tool} ({shell}), writing to {out_path}")
-                        try:
-                            extracted = False
-                            if archive_path.suffix == ".zip":
-                                import zipfile
-                                with zipfile.ZipFile(archive_path, "r") as z:
-                                    if file_in_archive in z.namelist():
-                                        with z.open(file_in_archive) as src, open(out_path, "wb") as dst:
-                                            dst.write(src.read())
-                                        extracted = True
-                            elif archive_path.suffixes[-2:] == [".tar", ".gz"] or archive_path.suffix == ".tgz":
-                                import tarfile
-                                with tarfile.open(archive_path, "r:gz") as tar:
-                                    try:
-                                        member = tar.getmember(file_in_archive)
-                                        with tar.extractfile(member) as src, open(out_path, "wb") as dst:
-                                            dst.write(src.read())
-                                        extracted = True
-                                    except KeyError:
-                                        print(f"[COMPLETIONS][ARCHIVE][ERROR] {file_in_archive} not found in {archive_path}", file=sys.stderr)
-                            if extracted:
-                                self.changed = True
-                            else:
-                                print(f"[COMPLETIONS][ARCHIVE][ERROR] Failed to extract {file_in_archive} from {archive_path}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"[COMPLETIONS][ARCHIVE][ERROR] Exception extracting {file_in_archive} from {archive_path}: {e}", file=sys.stderr)
                     elif method in ("plugin", "none"):
                         # Nothing to do at download step
                         continue

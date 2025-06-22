@@ -21,7 +21,15 @@
             path: "{{ user_home }}/.local/bin/{{ item }}"
           register: binary_stat
           loop: "{{ enabled_tools }}"
-          failed_when: not binary_stat.stat.exists or not binary_stat.stat.executable
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Assert enabled binaries are installed and executable
+          ansible.builtin.assert:
+            that:
+              - binary_stat.stat.exists
+              - binary_stat.stat.executable
+          loop: "{{ enabled_tools }}"
           loop_control:
             label: "{{ item }}"
 
@@ -32,7 +40,14 @@
             path: "{{ user_home }}/.local/bin/{{ item }}"
           register: binary_stat
           loop: "{{ disabled_tools }}"
-          failed_when: binary_stat.stat.exists
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Assert disabled binaries are NOT installed
+          ansible.builtin.assert:
+            that:
+              - not binary_stat.stat.exists
+          loop: "{{ disabled_tools }}"
           loop_control:
             label: "{{ item }}"
 
@@ -45,7 +60,16 @@
           loop:
             - fzf.bash
             - bat.bash
-          failed_when: not completion_stat.stat.exists
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Assert completions for enabled tools exist
+          ansible.builtin.assert:
+            that:
+              - completion_stat.stat.exists
+          loop:
+            - fzf.bash
+            - bat.bash
           loop_control:
             label: "{{ item }}"
 
@@ -59,6 +83,18 @@
             - eza.bash
             - zoxide.bash
             - direnv.bash
-          failed_when: completion_stat.stat.exists
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Assert completions for disabled tools do NOT exist
+          ansible.builtin.assert:
+            that:
+              - not completion_stat.stat.exists
+          loop:
+            - starship.bash
+            - sheldon.bash
+            - eza.bash
+            - zoxide.bash
+            - direnv.bash
           loop_control:
             label: "{{ item }}"

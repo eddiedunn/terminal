@@ -7,8 +7,11 @@ user_setup_environment_variables:
   EDITOR: vim
 
 # Git user configuration
-user_setup_git_email: "your.email@example.com"
-user_setup_git_name: "Your Name"
+user_setup_git_email: "user@example.com"
+user_setup_git_name: "Ansible User"
+
+# Optional: install system dependencies for nvm/pyenv/rustup (see README)
+# user_setup_install_dependencies: false
 
 # Internal variables
 user_setup_managed_block_marker: "# {mark} ANSIBLE MANAGED BLOCK (user_setup)"

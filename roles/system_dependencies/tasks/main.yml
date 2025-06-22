@@ -1,0 +1,43 @@
+---
+# tasks/main.yml for system_dependencies
+
+- name: Ensure package manager facts are gathered
+  ansible.builtin.setup:
+    filter: ansible_os_family
+
+- name: Install system dependencies for requested tools (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop: "{{ lookup('vars', 'system_dependencies_apt_packages') | default([]) }}"
+  when: ansible_facts['os_family'] == 'Debian' and system_dependencies_apt_packages | length > 0
+  become: true
+
+- name: Install system dependencies for requested tools (macOS)
+  community.general.homebrew:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ lookup('vars', 'system_dependencies_brew_packages') | default([]) }}"
+  when: ansible_facts['os_family'] == 'Darwin' and system_dependencies_brew_packages | length > 0
+  become: true
+
+- name: Set apt package list for requested tools
+  set_fact:
+    system_dependencies_apt_packages: "{{ system_dependencies_tools | map('extract', system_dependencies_apt_map) | list | flatten | unique }}"
+  vars:
+    system_dependencies_apt_map:
+      nvm: [ 'build-essential', 'libssl-dev', 'curl' ]
+      pyenv: [ 'make', 'build-essential', 'libssl-dev', 'zlib1g-dev', 'libbz2-dev', 'libreadline-dev', 'libsqlite3-dev', 'wget', 'curl', 'llvm', 'libncurses5-dev', 'libncursesw5-dev', 'xz-utils', 'tk-dev', 'libffi-dev', 'liblzma-dev' ]
+      rustup: [ 'curl', 'build-essential' ]
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Set brew package list for requested tools
+  set_fact:
+    system_dependencies_brew_packages: "{{ system_dependencies_tools | map('extract', system_dependencies_brew_map) | list | flatten | unique }}"
+  vars:
+    system_dependencies_brew_map:
+      nvm: [ 'nvm' ]
+      pyenv: [ 'pyenv' ]
+      rustup: [ 'rustup-init' ]
+  when: ansible_facts['os_family'] == 'Darwin'

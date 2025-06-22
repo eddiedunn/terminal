@@ -36,9 +36,9 @@ provisioner:
       # Ensure the remote tmp directory has correct permissions
       remote_tmp_mode: '0700'
       # Disable host key checking for testing
-      host_key_checking: False
+      host_key_checking: false
       # Disable retry files to avoid permission issues
-      retry_files_enabled: False
+      retry_files_enabled: false
       # Set fact caching to memory to avoid filesystem issues
       fact_caching: memory
       # Disable fact gathering for performance
@@ -47,7 +47,7 @@ provisioner:
       fact_caching_connection: ''
     ssh_connection:
       # Disable pipelining to avoid potential issues
-      pipelining: False
+      pipelining: false
       # Set the control path to a location with write permissions
       control_path: '/tmp/ansible-ssh-%%h-%%p-%%r'
   inventory:

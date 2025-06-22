@@ -47,9 +47,9 @@
       when: not ansible_facts
 
     - name: Apply user_setup role with full coverage
-      include_role:
+      ansible.builtin.include_role:
         name: user_setup
 
     - name: Verify role execution
-      debug:
+      ansible.builtin.debug:
         msg: "user_setup role executed successfully for bash and zsh with aliases and env vars"

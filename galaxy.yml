@@ -1,9 +1,9 @@
-namespace: your_namespace
+namespace: example
 name: terminal
 version: 1.0.0
 readme: README.md
 authors:
-  - 'Your Name <your.email@example.com>'
+  - 'Ansible User <user@example.com>'
 description: >-
   Modular Ansible collection to configure a modern, cross-platform terminal environment with userland tools, dotfiles, and developer shell workflows.
 license:
@@ -19,9 +19,9 @@ tags:
   - development
   - dotfiles
 dependencies: {}
-repository: 'https://github.com/your-namespace/terminal'
-homepage: 'https://github.com/your-namespace/terminal'
-issues: 'https://github.com/your-namespace/terminal/issues'
+repository: 'https://github.com/example/terminal'
+homepage: 'https://github.com/example/terminal'
+issues: 'https://github.com/example/terminal/issues'
 build_ignore:
   - .git
   - .gitignore

@@ -15,7 +15,7 @@
         - .config/fish/completions
 
     - name: Assert expected directories exist
-      assert:
+      ansible.builtin.assert:
         that:
           - item.stat.exists
           - item.stat.isdir
@@ -33,7 +33,7 @@
         - .gitignore_global
 
     - name: Assert dotfiles exist
-      assert:
+      ansible.builtin.assert:
         that:
           - item.stat.exists
           - item.stat.isreg
@@ -63,6 +63,6 @@
       failed_when: alias_env_check.rc != 0
 
     - name: Assert aliases and env vars present
-      assert:
+      ansible.builtin.assert:
         that:
           - alias_env_check.rc == 0

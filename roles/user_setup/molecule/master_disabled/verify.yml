@@ -3,7 +3,7 @@
   hosts: all
   tasks:
     - name: Verify terminal_setup_enabled is false
-      assert:
+      ansible.builtin.assert:
         that:
           - not hostvars[inventory_hostname]['terminal_setup_enabled'] | bool
         msg: "Master enable flag should be false in this scenario"
@@ -24,9 +24,9 @@
         - .bashrc_terminal_setup
       loop_control:
         label: "{{ item }}"
-    
+
     - name: Assert no files or directories were created
-      assert:
+      ansible.builtin.assert:
         that:
           - not item.stat.exists
       loop: "{{ path_stats.results }}"

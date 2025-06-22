@@ -18,7 +18,6 @@ end
 function __zoxide_cd
     if set -q __zoxide_loop
         builtin echo "zoxide: infinite loop detected"
-        builtin echo "Avoid aliasing `cd` to `z` directly, use `zoxide init --cmd=cd fish` instead"
         return 1
     end
     __zoxide_loop=1 __zoxide_cd_internal $argv
@@ -97,4 +96,3 @@ alias zi=__zoxide_zi
 # To initialize zoxide, add this to your configuration (usually
 # ~/.config/fish/config.fish):
 #
-#   zoxide init fish | source

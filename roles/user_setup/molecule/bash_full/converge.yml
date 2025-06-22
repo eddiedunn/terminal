@@ -14,4 +14,4 @@
       - direnv
       - rustup
   roles:
-    - role: "terminal_setup"
+    - role: "user_setup"
