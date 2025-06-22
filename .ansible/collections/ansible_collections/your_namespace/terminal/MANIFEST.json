@@ -1,0 +1,39 @@
+{
+ "collection_info": {
+  "namespace": "your_namespace",
+  "name": "terminal",
+  "version": "1.0.0",
+  "authors": [
+   "Your Name <your.email@example.com>"
+  ],
+  "readme": "README.md",
+  "tags": [
+   "terminal",
+   "shell",
+   "zsh",
+   "bash",
+   "starship",
+   "sheldon",
+   "development",
+   "dotfiles"
+  ],
+  "description": "Modular Ansible collection to configure a modern, cross-platform terminal environment with userland tools, dotfiles, and developer shell workflows.",
+  "license": [
+   "MIT"
+  ],
+  "license_file": null,
+  "dependencies": {},
+  "repository": "https://github.com/your-namespace/terminal",
+  "documentation": null,
+  "homepage": "https://github.com/your-namespace/terminal",
+  "issues": "https://github.com/your-namespace/terminal/issues"
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "063bf19c471c047b9b59cd03e6154a89ef2ec1c3ab968704cbe31a0fcbd72cea",
+  "format": 1
+ },
+ "format": 1
+}

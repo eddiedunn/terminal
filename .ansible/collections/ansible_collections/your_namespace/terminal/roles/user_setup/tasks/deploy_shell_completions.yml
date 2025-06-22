@@ -1,0 +1,22 @@
+---
+# tasks/deploy_shell_completions.yml
+# Deploys a set of completion files for a single shell.
+
+- name: "Set shell var from loop"
+  ansible.builtin.set_fact:
+    current_shell: "{{ shell_result.item }}"
+
+- name: "Deploy completion files for {{ current_shell }}"
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ ansible_user_dir }}/{{ completion_dirs[current_shell] }}/{{ item.path | basename }}"
+    owner: "{{ ansible_user_id | default(ansible_user) }}"
+    mode: '0644'
+  loop: "{{ shell_result.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when:
+    # General condition: only deploy if the shell is active
+    - current_shell in terminal_setup_active_shells
+    # Specific condition for FZF on Zsh: skip if managed by Sheldon plugin
+    - not (current_shell == 'zsh' and fzf_is_managed_by_sheldon and ('fzf' in (item.path | basename)))

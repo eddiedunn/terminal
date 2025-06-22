@@ -1,0 +1,47 @@
+---
+- name: Converge tool_installer role with minimal and enabled tools
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    ansible_user_dir: "/root"
+    tool_installer_tools:
+      - starship
+      - eza
+      - fzf
+    tool_installer_shells:
+      - bash
+      - zsh
+
+  pre_tasks:
+    - name: Install Python and requirements
+      ansible.builtin.raw: |
+        set -e
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          python3 python3-pip sudo bash curl
+        ln -sf /usr/bin/python3 /usr/bin/python
+      register: install_result
+      changed_when: install_result.rc == 0
+      ignore_errors: true
+      retries: 3
+      delay: 5
+      until: install_result is succeeded
+
+    - name: Ensure remote temporary directory exists
+      ansible.builtin.file:
+        path: /tmp/ansible
+        state: directory
+        mode: '1777'
+        owner: root
+        group: root
+
+  tasks:
+    - name: Gather facts after Python is installed
+      ansible.builtin.setup:
+      when: not ansible_facts
+
+    - name: Include tool_installer role
+      include_role:
+        name: your_namespace.terminal.tool_installer

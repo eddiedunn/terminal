@@ -1,0 +1,42 @@
+# roles/terminal_setup/tasks/backup_configs.yml
+---
+# This version attempts to back up every file on every run to isolate the copy issue.
+
+- name: Set backup paths for config file
+  ansible.builtin.set_fact:
+    target_path: "{{ ansible_user_dir }}/{{ config_file }}"
+    new_backup_path: "{{ ansible_user_dir }}/backup/{{ config_file | replace('/', '_') }}.{{ ansible_facts.date_time.iso8601_basic_short }}"
+
+- name: Check if config file exists
+  ansible.builtin.stat:
+    path: "{{ target_path }}"
+  register: source_file_stat
+
+- name: Perform backup if config file exists
+  when: source_file_stat.stat.exists and source_file_stat.stat.isreg
+  block:
+    - name: Force backup copy of config file
+      ansible.builtin.copy:
+        src: "{{ target_path }}"
+        dest: "{{ new_backup_path }}"
+        remote_src: true
+        mode: preserve
+      register: backup_copy_result
+
+    - name: Verify backup file was created
+      ansible.builtin.stat:
+        path: "{{ new_backup_path }}"
+      register: verify_backup_stat
+
+    - name: Fail if backup file was not created after copy
+      ansible.builtin.fail:
+        msg: |
+          CRITICAL FAILURE: The 'copy' task for {{ config_file }} reported success (changed={{ backup_copy_result.changed }}),
+          but the destination file {{ new_backup_path }} does NOT exist.
+          This points to a fundamental issue with the copy operation on this host.
+      when: not verify_backup_stat.stat.exists
+
+# - name: "Pause to allow inspection"
+#   ansible.builtin.pause:
+#     prompt: "Backup for {{ config_file }} is complete. The backup directory should now contain a file. Press Enter to continue to the next file."
+#   when: source_file_stat.stat.exists and source_file_stat.stat.isreg

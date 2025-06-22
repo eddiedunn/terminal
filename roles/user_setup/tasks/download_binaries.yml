@@ -1,0 +1,37 @@
+# roles/terminal_setup/tasks/download_binaries.yml
+# This task file is intended to be run on the Ansible controller (localhost).
+---
+- name: Ensure Python dependencies for download script are present
+  ansible.builtin.shell: |
+    source .venv/bin/activate
+    uv pip install pyyaml requests
+  args:
+    executable: /bin/bash
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: Ensure scripts directory exists
+  ansible.builtin.file:
+    path: "{{ role_path }}/scripts"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: Execute binary download and verification script
+  ansible.builtin.command:
+    cmd: "python3 {{ role_path }}/scripts/download_helper.py {{ role_path }}"
+  register: script_result
+  changed_when: "'CHANGED' in script_result.stdout"
+  delegate_to: localhost
+  run_once: true
+  args:
+    chdir: "{{ role_path }}"
+
+- name: Display script output
+  ansible.builtin.debug:
+    var: script_result.stdout_lines
+  delegate_to: localhost
+  run_once: true
+

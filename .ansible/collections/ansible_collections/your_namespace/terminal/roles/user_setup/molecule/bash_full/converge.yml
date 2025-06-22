@@ -1,0 +1,17 @@
+---
+- name: Converge (Bash Full)
+  hosts: all
+  become: true
+  vars:
+    shell_type: "bash"
+    terminal_setup_profile_tools:
+      - starship
+      - sheldon
+      - fzf
+      - bat
+      - eza
+      - zoxide
+      - direnv
+      - rustup
+  roles:
+    - role: "terminal_setup"

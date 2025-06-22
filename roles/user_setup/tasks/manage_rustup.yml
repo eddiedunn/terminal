@@ -1,0 +1,29 @@
+---
+# tasks/manage_rustup.yml
+# Included from main.yml for tools with install_type == 'rustup'
+
+- name: Manage rustup installation
+  block:
+    - name: Install dependencies for rustup
+      ansible.builtin.package:
+        name: "{{ tool.dependencies[ansible_os_family] }}"
+        state: present
+      become: "{{ ansible_os_family != 'Darwin' }}"
+      when:
+        - tool.dependencies is defined
+        - tool.dependencies[ansible_os_family] is defined
+
+    - name: Check if rustup is already installed
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.cargo/bin/rustup"
+      register: rustup_binary_stat
+
+    - name: Download and install rustup non-interactively
+      ansible.builtin.shell:
+        cmd: "curl --proto '=https' --tlsv1.2 -sSf {{ tool.installer_url }} | sh -s -- -y --no-modify-path"
+      environment:
+        CARGO_HOME: "{{ ansible_user_dir }}/.cargo"
+        RUSTUP_HOME: "{{ ansible_user_dir }}/.rustup"
+      when: not rustup_binary_stat.stat.exists
+      register: rustup_install_result
+      changed_when: rustup_install_result.rc == 0

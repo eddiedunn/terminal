@@ -1,0 +1,33 @@
+---
+- name: Verify no files or directories created when master enable is off
+  hosts: all
+  tasks:
+    - name: Verify terminal_setup_enabled is false
+      assert:
+        that:
+          - not hostvars[inventory_hostname]['terminal_setup_enabled'] | bool
+        msg: "Master enable flag should be false in this scenario"
+
+    - name: Get list of enabled tools (for reference)
+      ansible.builtin.set_fact:
+        enabled_tools: "{{ hostvars[inventory_hostname]['terminal_setup_profile_tools'] | default([]) }}"
+      when: hostvars[inventory_hostname].terminal_setup_profile_tools is defined
+
+    - name: Verify common directories and files do not exist
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/{{ item }}"
+      register: path_stats
+      loop:
+        - .local/bin
+        - .config/sheldon
+        - .config/starship.toml
+        - .bashrc_terminal_setup
+      loop_control:
+        label: "{{ item }}"
+    
+    - name: Assert no files or directories were created
+      assert:
+        that:
+          - not item.stat.exists
+      loop: "{{ path_stats.results }}"
+      when: path_stats is defined

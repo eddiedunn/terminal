@@ -1,0 +1,15 @@
+# Python artifacts
+*.pyc
+__pycache__/
+.venv/
+
+# Build artifacts
+*.tar.gz
+
+# Molecule artifacts
+.molecule/
+.vagrant/
+
+# Test caches
+*.moltest_cache.json
+*.cache

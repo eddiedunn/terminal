@@ -1,0 +1,4 @@
+---
+# defaults file for your_namespace.terminal.pyenv
+pyenv_version: "v2.3.32"
+pyenv_git_repo: "https://github.com/pyenv/pyenv.git"

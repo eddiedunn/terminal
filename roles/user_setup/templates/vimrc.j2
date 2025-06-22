@@ -1,0 +1,102 @@
+{#
+  This is a Jinja2 template for .vimrc, even if currently static.
+  It is future-proofed for possible variable substitution.
+  All variable references are guarded for safety.
+#}
+{% if tool is not defined %}{% set tool = {} %}{% endif %}
+{#
+  This is a Jinja2 template for .vimrc, even if currently static.
+  It is future-proofed for possible variable substitution.
+  All variable references are guarded for safety.
+#}
+{% if tool is not defined %}{% set tool = {} %}{% endif %}
+" Ansible managed: {{ ansible_managed }}
+" Vim configuration managed by 'terminal_setup' Ansible role
+
+" ===== Basic Settings =====
+" Core editor behavior
+set nocompatible      " Use Vim settings, rather than Vi settings
+syntax on             " Enable syntax highlighting
+filetype on           " Enable filetype detection
+filetype plugin on    " Enable filetype-specific plugins
+filetype indent on    " Enable filetype-specific indentation
+
+" UI Configuration
+set number            " Show line numbers
+set cursorline        " Highlight current line
+set showcmd           " Show command in bottom bar
+set showmode          " Show current mode
+set showmatch         " Show matching brackets
+set scrolloff=5       " Show at least 5 lines above/below cursor
+set laststatus=2      " Always show status line
+set wildmenu          " Visual autocomplete for command menu
+set lazyredraw        " Redraw only when needed
+
+" Search settings
+set hlsearch          " Highlight matches
+set incsearch         " Search as characters are entered
+set ignorecase        " Case-insensitive searching
+set smartcase         " Case-sensitive if expression contains a capital letter
+
+" Indentation
+set autoindent        " Auto-indent new lines
+set smartindent       " Enable smart-indent
+set expandtab         " Use spaces instead of tabs
+set tabstop=2         " Number of spaces per TAB
+set shiftwidth=2      " Number of spaces for auto-indent
+set softtabstop=2     " Number of spaces for tab in insert mode
+
+" Backup and swap files
+set nobackup          " Don't create backup files
+set nowritebackup     " Don't create backup before overwriting
+set noswapfile        " Don't create swap files
+set undodir=~/.vim/undodir  " Undo directory
+set undofile          " Persistent undo
+
+" Clipboard integration
+if has('clipboard')
+  set clipboard^=unnamed,unnamedplus  " Use system clipboard
+endif
+
+" ===== Tool-Specific Configuration =====
+{% for tool in terminal_setup_tools_processed %}
+{%- if tool.vimrc is defined %}
+" {{ tool.name | title }} Configuration
+{{ tool.vimrc | indent(0) }}
+{%- endif %}
+{%- endfor %}
+
+" ===== Key Mappings =====
+" Remap leader to space
+let mapleader = " "
+
+" Quick save and quit
+nmap <leader>w :w<CR>
+nmap <leader>q :q<CR>
+
+" Clear search highlighting
+noremap <silent> <leader><space> :noh<CR>
+
+" Split navigation
+nmap <leader>h :wincmd h<CR>
+nmap <leader>j :wincmd j<CR>
+nmap <leader>k :wincmd k<CR>
+nmap <leader>l :wincmd l<CR>
+
+" Buffer navigation
+nmap <leader>bn :bnext<CR>
+nmap <leader>bp :bprevious<CR>
+
+" Plugin shortcuts
+nmap <leader>t :NERDTreeToggle<CR>
+
+" ===== Custom Commands =====
+" Remove trailing whitespace on save
+autocmd BufWritePre * %s/\s\+$//e
+
+" Auto-reload .vimrc when saved
+autocmd! bufwritepost .vimrc source %
+
+" ===== User Customization =====
+" Add your custom vimrc settings below this line
+" They will be preserved across role updates

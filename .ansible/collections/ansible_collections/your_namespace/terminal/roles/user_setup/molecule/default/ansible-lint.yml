@@ -1,0 +1,6 @@
+---
+# Ansible Lint configuration for Molecule
+skip_list:
+  - experimental
+warn_list:
+  - fqcn-builtins

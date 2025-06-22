@@ -1,0 +1,212 @@
+---
+# tasks/main.yml for your_namespace.terminal.user_setup
+
+- name: Ensure base user directories exist
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - .local/bin
+    - .config
+    - .config/shell_init.d
+    - .zsh/completions
+    - .bash_completion.d
+    - .config/fish/completions
+  loop_control:
+    label: "{{ item }}"
+
+
+- name: Deploy general dotfiles
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ ansible_user_dir }}/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: "vimrc.j2", dest: ".vimrc" }
+    - { src: "gitconfig.j2", dest: ".gitconfig" }
+    - { src: "gitignore_global.j2", dest: ".gitignore_global" }
+  loop_control:
+    label: "{{ item.dest }}"
+
+
+# ---- Shell Initialization ----
+
+- name: Manage Bash initialization
+  block:
+    - name: Manage .bashrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.bashrc"
+        create: true
+        mode: '0644'
+        marker: "{{ user_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'bashrc_snippet.j2') }}"
+    - name: Manage .bash_aliases
+      ansible.builtin.template:
+        src: "bash_aliases_snippet.j2"
+        dest: "{{ ansible_user_dir }}/.bash_aliases"
+        mode: "0644"
+
+- name: Manage Zsh initialization
+  block:
+    - name: Manage .zshrc (for interactive shells)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.zshrc"
+        create: true
+        mode: '0644'
+        marker: "{{ user_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'zshrc_snippet.j2') }}"
+    - name: Manage .zshenv (for all shells)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.zshenv"
+        create: true
+        mode: '0644'
+        marker: "{{ user_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'zshenv_snippet.j2') }}"
+    - name: Manage .zsh_aliases
+      ansible.builtin.template:
+        src: "zsh_aliases_snippet.j2"
+        dest: "{{ ansible_user_dir }}/.zsh_aliases"
+        mode: "0644"
+  ansible.builtin.meta: end_play
+  when: terminal_setup_profile_tools | length == 0
+
+# ---- 2. Backup and Directory Setup ----
+
+- name: Ensure backup directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/backup"
+    state: directory
+    mode: '0700'
+  when: ansible_user_dir is defined
+
+- name: Include backup and cleanup tasks for each configuration file
+  ansible.builtin.include_tasks: backup_configs.yml
+  loop:
+    - ".bashrc"
+    - ".zshrc"
+    - ".zshenv"
+    - ".vimrc"
+    - ".gitconfig"
+    - ".gitignore_global"
+    - ".bash_aliases"
+    - ".zsh_aliases"
+    - ".config/starship.toml"
+    - ".config/sheldon/plugins.toml"
+  loop_control:
+    loop_var: config_file
+
+- name: Ensure base user directories exist
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - .local/bin
+    - .config
+    - .config/sheldon
+
+# ---- 3. Tool and Configuration Management ----
+
+- name: Manage binary-based tools
+  ansible.builtin.include_tasks: manage_binaries.yml
+  loop: "{{ terminal_setup_tools_processed | selectattr('state', 'eq', 'present') | selectattr('install_type', 'eq', 'binary') | list }}"
+  loop_control:
+    loop_var: tool
+
+- name: Manage script-based tools (nvm, pyenv, etc.)
+  ansible.builtin.include_tasks: manage_scripts.yml
+  loop: "{{ terminal_setup_tools_processed | selectattr('state', 'eq', 'present') | selectattr('install_type', 'eq', 'script') | list }}"
+  loop_control:
+    loop_var: tool
+
+- name: Manage rustup installation
+  ansible.builtin.include_tasks: manage_rustup.yml
+  loop: "{{ terminal_setup_tools_processed | selectattr('state', 'eq', 'present') | selectattr('install_type', 'eq', 'rustup') | list }}"
+  loop_control:
+    loop_var: tool
+
+- name: "Deploy user-defined script repositories"
+  ansible.builtin.include_tasks: manage_script_repos.yml
+  when: terminal_setup_script_repos is defined and terminal_setup_script_repos | length > 0
+  loop: "{{ terminal_setup_script_repos | default([]) }}"
+  loop_control:
+    loop_var: repo
+
+- name: Manage Sheldon plugins and lock file
+  ansible.builtin.include_tasks: manage_sheldon.yml
+  when: "'sheldon' in terminal_setup_profile_tools"
+
+- name: Install shell completions for enabled tools
+  ansible.builtin.include_tasks: manage_completions.yml
+
+- name: Manage symlinks for staged binaries
+  ansible.builtin.include_tasks: manage_symlinks.yml
+  when: terminal_setup_tools_processed | selectattr('symlink_as', 'defined') | selectattr('state', 'eq', 'present') | list | length > 0
+
+- name: Deploy tool-specific configuration files
+  ansible.builtin.template:
+    src: "{{ tool.config_file }}.j2"
+    dest: "{{ ansible_user_dir }}/.config/{{ tool.config_dir | default('') }}/{{ tool.config_file }}"
+    mode: "0644"
+  loop: "{{ terminal_setup_tools_processed | selectattr('state', 'eq', 'present') | selectattr('config_file', 'defined') | selectattr('config_file', '!=', '') | list }}"
+  loop_control:
+    loop_var: tool
+    label: "{{ tool.config_file }}"
+
+
+- name: Deploy general dotfiles
+  ansible.builtin.template:
+    src: "{{ dotfile_item.src }}"
+    dest: "{{ ansible_user_dir }}/{{ dotfile_item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: "vimrc.j2", dest: ".vimrc" }
+    - { src: "gitconfig.j2", dest: ".gitconfig" }
+    - { src: "gitignore_global.j2", dest: ".gitignore_global" }
+  loop_control:
+    loop_var: dotfile_item
+
+# ---- 4. Shell Initialization ----
+
+- name: Manage Bash initialization
+  when: "'bash' in terminal_setup_active_shells"
+  block:
+    - name: Manage .bashrc
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.bashrc"
+        create: true
+        mode: '0644'
+        marker: "{{ terminal_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'bashrc_snippet.j2') }}"
+
+    - name: Manage .bash_aliases
+      ansible.builtin.template:
+        src: "bash_aliases_snippet.j2"
+        dest: "{{ ansible_user_dir }}/.bash_aliases"
+        mode: "0644"
+
+- name: Manage Zsh initialization
+  when: "'zsh' in terminal_setup_active_shells"
+  block:
+    - name: Manage .zshrc (for interactive shells)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.zshrc"
+        create: true
+        mode: '0644'
+        marker: "{{ terminal_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'zshrc_snippet.j2') }}"
+
+    - name: Manage .zshenv (for all shells)
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_user_dir }}/.zshenv"
+        create: true
+        mode: '0644'
+        marker: "{{ terminal_setup_managed_block_marker }}"
+        block: "{{ lookup('template', 'zshenv_snippet.j2') }}"
+
+    - name: Manage .zsh_aliases
+      ansible.builtin.template:
+        src: "zsh_aliases_snippet.j2"
+        dest: "{{ ansible_user_dir }}/.zsh_aliases"
+        mode: "0644"

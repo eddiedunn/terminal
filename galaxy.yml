@@ -1,0 +1,28 @@
+namespace: your_namespace
+name: terminal
+version: 1.0.0
+readme: README.md
+authors:
+  - 'Your Name <your.email@example.com>'
+description: >-
+  Modular Ansible collection to configure a modern, cross-platform terminal environment with userland tools, dotfiles, and developer shell workflows.
+license:
+  - MIT
+tags:
+  - terminal
+  - shell
+  - zsh
+  - bash
+  - starship
+  - sheldon
+  - development
+  - dotfiles
+dependencies: {}
+repository: 'https://github.com/your-namespace/terminal'
+homepage: 'https://github.com/your-namespace/terminal'
+issues: 'https://github.com/your-namespace/terminal/issues'
+build_ignore:
+  - .git
+  - .gitignore
+  - '*.tar.gz'
+  - 'molecule/'

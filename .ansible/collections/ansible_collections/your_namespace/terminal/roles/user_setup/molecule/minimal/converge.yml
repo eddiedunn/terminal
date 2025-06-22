@@ -1,0 +1,10 @@
+---
+- name: Converge (Minimal)
+  hosts: all
+  become: true
+  vars:
+    terminal_setup_profile_tools:
+      - fzf
+      - bat
+  roles:
+    - role: "terminal_setup"

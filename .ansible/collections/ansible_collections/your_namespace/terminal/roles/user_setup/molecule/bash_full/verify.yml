@@ -1,0 +1,130 @@
+---
+- name: Verify (Bash Full)
+  hosts: all
+  become: true
+  vars:
+    user_home: "{{ ansible_facts.get('user_dir', ansible_user_dir) }}"
+    enabled_tools: "{{ hostvars[inventory_hostname]['terminal_setup_profile_tools'] }}"
+  tasks:
+    - name: Block for Verifying Binaries
+      block:
+        - name: Verify binaries are installed and executable
+          ansible.builtin.stat:
+            path: "{{ user_home }}/.local/bin/{{ item }}"
+          register: binary_stat
+          loop: "{{ enabled_tools }}"
+          failed_when: not binary_stat.stat.exists or not binary_stat.stat.executable
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Verify binaries can execute and return a version
+          ansible.builtin.command: "{{ user_home }}/.local/bin/{{ item }} --version"
+          register: version_check
+          changed_when: false
+          loop: "{{ binary_tools }}"
+          failed_when: version_check.rc != 0
+          loop_control:
+            label: "{{ item }}"
+
+    - name: Block for Verifying rustup
+      when: "'rustup' in enabled_tools"
+      block:
+        - name: Verify rustup is installed and executable
+          ansible.builtin.stat:
+            path: "{{ user_home }}/.cargo/bin/rustup"
+          register: rustup_stat
+          failed_when: not rustup_stat.stat.exists or not rustup_stat.stat.executable
+
+        - name: Verify rustup can execute and return a version
+          ansible.builtin.command: "bash -lc 'source {{ user_home }}/.bashrc && rustup --version'"
+          register: version_check
+          changed_when: false
+          failed_when: version_check.rc != 0
+
+    - name: Block for Verifying Config Files
+      block:
+        - name: Verify core config directories and files exist
+          ansible.builtin.stat:
+            path: "{{ user_home }}/{{ item }}"
+          register: config_stat
+          loop:
+            - ".config/starship.toml"
+            - ".config/sheldon/plugins.toml"
+          failed_when: not config_stat.stat.exists
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Verify user dotfiles exist
+          ansible.builtin.stat:
+            path: "{{ user_home }}/{{ item }}"
+          register: dotfile_stat
+          loop:
+            - ".vimrc"
+            - ".gitconfig"
+            - ".gitignore_global"
+          failed_when: not dotfile_stat.stat.exists
+          loop_control:
+            label: "{{ item }}"
+
+    - name: Block for Verifying Shell Configuration
+      block:
+        - name: Read .bashrc content
+          ansible.builtin.slurp:
+            src: "{{ user_home }}/.bashrc"
+          register: bashrc_content
+
+        - name: Assert init snippets are present in bashrc
+          ansible.builtin.assert:
+            that:
+              - "'starship init bash' in snippet_decoded"
+              - "'sheldon source' in snippet_decoded"
+              - "'zoxide init bash' in snippet_decoded"
+              - "'direnv hook bash' in snippet_decoded"
+              - "'fzf-key-bindings.bash' in snippet_decoded"
+            vars:
+              snippet_decoded: "{{ bashrc_snippet_content.content | b64decode }}"
+
+        - name: Assert global and tool-specific env vars in bashrc snippet
+          ansible.builtin.assert:
+            that:
+              - "'export EDITOR=\"vim\"' in snippet_decoded"
+              - "'export FZF_DEFAULT_OPTS=\"--height 40% --layout=reverse --border\"' in snippet_decoded"
+              - "'export DIRENV_LOG_FORMAT=\"\"' in snippet_decoded"
+            vars:
+              snippet_decoded: "{{ bashrc_snippet_content.content | b64decode }}"
+
+        - name: Read .bash_aliases content
+          ansible.builtin.slurp:
+            src: "{{ user_home }}/.bash_aliases"
+          register: bash_aliases_content
+
+        - name: Assert aliases are present
+          ansible.builtin.assert:
+            that:
+              - "'alias bat=' in aliases_decoded"
+              - "'alias ls=' in aliases_decoded"
+              - "'alias ll=' in aliases_decoded"
+            vars:
+              aliases_decoded: "{{ bash_aliases_content.content | b64decode }}"
+
+    - name: Block for Verifying Bash Completions
+      block:
+        - name: Ensure bash completions directory exists
+          ansible.builtin.stat:
+            path: "{{ user_home }}/.bash_completion.d"
+          register: completions_dir
+          failed_when: not completions_dir.stat.exists or not completions_dir.stat.isdir
+
+        - name: Find staged bash completions in the role
+          ansible.builtin.find:
+            paths: "{{ role_path }}/files/completions/bash"
+          register: staged_completions
+          delegate_to: localhost
+
+        - name: Verify staged completions are deployed
+          ansible.builtin.stat:
+            path: "{{ user_home }}/.bash_completion.d/{{ item.path | basename }}"
+          loop: "{{ staged_completions.files }}"
+          failed_when: not item.stat.exists
+          loop_control:
+            label: "{{ item.path | basename }}"

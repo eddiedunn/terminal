@@ -1,0 +1,84 @@
+# This file is staged by the download step and used by the role to deploy completions.
+# Each tool can specify completions for zsh, bash, and fish, with the method for each.
+# Supported methods: plugin, archive, cli, url, none
+
+completions:
+  - name: fzf
+    version: "0.62.0"
+    zsh:
+      - method: url
+        url: https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh
+        output: _fzf
+      - method: url
+        url: https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh
+        output: fzf-key-bindings.zsh
+    bash:
+      - method: url
+        url: https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.bash
+        output: fzf-completion.bash
+      - method: url
+        url: https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.bash
+        output: fzf-key-bindings.bash
+    fish:
+      - method: url
+        url: https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.fish
+        output: fzf-key-bindings.fish
+
+  - name: bat
+    version: "0.25.0"
+    zsh:
+      - method: cli
+        command: "bat --completion zsh"
+        output: "bat.zsh"
+    bash:
+      - method: cli
+        command: "bat --completion bash"
+        output: "bat.bash"
+    fish:
+      - method: cli
+        command: "bat --completion fish"
+        output: "bat.fish"
+  - name: eza
+    zsh:
+      - method: archive
+        archive_path: "completions/zsh/_eza"
+        output: "_eza"
+    bash:
+      - method: none
+    fish:
+      - method: none
+  - name: zoxide
+    zsh:
+      method: cli
+      command: "zoxide init zsh --cmd z"
+      output: "zoxide.zsh"
+    bash:
+      method: cli
+      command: "zoxide init bash --cmd z"
+      output: "zoxide.bash"
+    fish:
+      method: cli
+      command: "zoxide init fish --cmd z"
+      output: "zoxide.fish"
+  - name: direnv
+    zsh:
+      method: none
+    bash:
+      method: none
+    fish:
+      method: none
+
+  - name: ripgrep
+    version: "14.1.0"
+    zsh:
+      - method: cli
+        command: "rg --completion zsh"
+        output: "_rg"
+    bash:
+      - method: cli
+        command: "rg --completion bash"
+        output: "rg.bash"
+    fish:
+      - method: cli
+        command: "rg --completion fish"
+        output: "rg.fish"

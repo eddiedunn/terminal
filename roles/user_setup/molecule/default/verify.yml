@@ -1,0 +1,68 @@
+---
+- name: Verify user_setup role results
+  hosts: all
+  tasks:
+    - name: Check expected directories exist
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/{{ item }}"
+      register: dir_stats
+      loop:
+        - .local/bin
+        - .config
+        - .config/shell_init.d
+        - .zsh/completions
+        - .bash_completion.d
+        - .config/fish/completions
+
+    - name: Assert expected directories exist
+      assert:
+        that:
+          - item.stat.exists
+          - item.stat.isdir
+      loop: "{{ dir_stats.results }}"
+      loop_control:
+        label: "{{ item.stat.path }}"
+
+    - name: Check dotfiles exist
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/{{ item }}"
+      register: dotfile_stats
+      loop:
+        - .vimrc
+        - .gitconfig
+        - .gitignore_global
+
+    - name: Assert dotfiles exist
+      assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+      loop: "{{ dotfile_stats.results }}"
+      loop_control:
+        label: "{{ item.stat.path }}"
+
+    - name: Check shell managed blocks exist
+      ansible.builtin.shell: |
+        grep -q 'ANSIBLE MANAGED BLOCK (user_setup)' {{ ansible_user_dir }}/{{ item }}
+      register: shell_block_check
+      failed_when: shell_block_check.rc != 0
+      loop:
+        - .bashrc
+        - .zshrc
+        - .zshenv
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Check aliases and env vars in shell files
+      ansible.builtin.shell: |
+        grep -q 'll="ls -l"' {{ ansible_user_dir }}/.bash_aliases && \
+        grep -q 'gs="git status"' {{ ansible_user_dir }}/.zsh_aliases && \
+        grep -q 'export EDITOR="nano"' {{ ansible_user_dir }}/.zshenv && \
+        grep -q 'export LANG="en_US.UTF-8"' {{ ansible_user_dir }}/.zshenv
+      register: alias_env_check
+      failed_when: alias_env_check.rc != 0
+
+    - name: Assert aliases and env vars present
+      assert:
+        that:
+          - alias_env_check.rc == 0

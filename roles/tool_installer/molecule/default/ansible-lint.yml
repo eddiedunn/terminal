@@ -1,0 +1,7 @@
+---
+skip_list:
+  - experimental
+  - yaml
+warn_list:
+  - fqcn-builtins
+  - yaml

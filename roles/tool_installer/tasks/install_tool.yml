@@ -1,0 +1,12 @@
+---
+# This sub-task installs a single tool's binary, completions, and init snippet.
+
+- name: "Manage binary for {{ tool.name }}"
+  ansible.builtin.include_tasks: manage_binary.yml
+
+- name: "Manage completions for {{ tool.name }}"
+  ansible.builtin.include_tasks: manage_completions.yml
+
+- name: "Manage init snippet for {{ tool.name }}"
+  ansible.builtin.include_tasks: manage_init_snippet.yml
+  when: tool.init_snippet is defined or tool.init_snippet_zsh is defined

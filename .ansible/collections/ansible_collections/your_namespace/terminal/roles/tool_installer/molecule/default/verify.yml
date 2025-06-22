@@ -1,0 +1,76 @@
+---
+- name: Verify tool_installer role
+  hosts: all
+  tasks:
+    - name: Check that binaries are installed
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.local/bin/{{ item }}"
+      register: bin_stats
+      loop:
+        - starship
+        - eza
+        - fzf
+
+    - name: Assert binaries exist
+      assert:
+        that:
+          - item.stat.exists
+      loop: "{{ bin_stats.results }}"
+
+    - name: Check shell init snippets exist for enabled tools
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.config/shell_init.d/{{ item }}.bash"
+      register: bash_init_stats
+      loop:
+        - 98_starship.bash
+        - 97_eza.bash
+        - 96_fzf.bash
+
+    - name: Assert bash init snippets exist
+      assert:
+        that:
+          - item.stat.exists
+      loop: "{{ bash_init_stats.results }}"
+
+    - name: Check shell init snippets exist for enabled tools (zsh)
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.config/shell_init.d/{{ item }}.zsh"
+      register: zsh_init_stats
+      loop:
+        - 98_starship.zsh
+        - 97_eza.zsh
+        - 96_fzf.zsh
+
+    - name: Assert zsh init snippets exist
+      assert:
+        that:
+          - item.stat.exists
+      loop: "{{ zsh_init_stats.results }}"
+
+    - name: Check completions exist for enabled tools (zsh)
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.zsh/completions/{{ item }}"
+      register: zsh_completion_stats
+      loop:
+        - fzf-key-bindings.zsh
+        - fzf-completion.zsh
+
+    - name: Assert zsh completions exist
+      assert:
+        that:
+          - item.stat.exists
+      loop: "{{ zsh_completion_stats.results }}"
+
+    - name: Check completions exist for enabled tools (bash)
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.bash_completion.d/{{ item }}"
+      register: bash_completion_stats
+      loop:
+        - fzf-key-bindings.bash
+        - fzf-completion.bash
+
+    - name: Assert bash completions exist
+      assert:
+        that:
+          - item.stat.exists
+      loop: "{{ bash_completion_stats.results }}"

@@ -1,0 +1,4 @@
+---
+# defaults file for your_namespace.terminal.nvm
+nvm_version: "v0.40.3"
+nvm_git_repo: "https://github.com/nvm-sh/nvm.git"

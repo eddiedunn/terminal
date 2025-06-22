@@ -1,0 +1,13 @@
+---
+- name: "Clone pyenv repository"
+  ansible.builtin.git:
+    repo: "{{ pyenv_git_repo }}"
+    dest: "{{ ansible_user_dir }}/.pyenv"
+    version: "{{ pyenv_version }}"
+    force: false
+
+- name: "Deploy pyenv init script"
+  ansible.builtin.template:
+    src: pyenv.sh.j2
+    dest: "{{ ansible_user_dir }}/.config/shell_init.d/10-pyenv.sh"
+    mode: '0755'

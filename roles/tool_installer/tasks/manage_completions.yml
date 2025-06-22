@@ -1,0 +1,23 @@
+---
+- name: Find staged completion files for {{ tool.name }}
+  ansible.builtin.find:
+    paths: "{{ role_path }}/files/completions/{{ item }}/"
+    patterns: "{{ tool.name }}.*"
+  register: found_completions
+  loop: "{{ tool_installer_shells }}"
+  loop_control:
+    loop_var: current_shell
+  delegate_to: localhost
+
+- name: "Deploy completion files for {{ tool.name }}"
+  ansible.builtin.copy:
+    src: "{{ item.1.path }}"
+    dest: "{{ ansible_user_dir }}/{{ completion_dirs[item.0] }}/{{ item.1.path | basename }}"
+    mode: '0644'
+  loop: "{{ tool_installer_shells | product(found_completions.results | map(attribute='files') | flatten) | list }}"
+  when: "item.0 in item.1.path"
+  vars:
+    completion_dirs:
+      zsh: ".zsh/completions"
+      bash: ".bash_completion.d"
+      fish: ".config/fish/completions"

@@ -1,0 +1,33 @@
+---
+# tasks/main.yml for your_namespace.terminal.profile
+# This meta-role orchestrates the other roles in the collection.
+
+- name: "1. Set up base user environment"
+  ansible.builtin.include_role:
+    name: your_namespace.terminal.user_setup
+  vars:
+    user_setup_shells: "{{ profile_shells }}"
+    user_setup_custom_aliases: "{{ profile_custom_aliases }}"
+    user_setup_environment_variables: "{{ profile_environment_variables }}"
+
+- name: "2. Install binary-based tools"
+  ansible.builtin.include_role:
+    name: your_namespace.terminal.tool_installer
+  vars:
+    tool_installer_tools: "{{ profile_tools }}"
+    tool_installer_shells: "{{ profile_shells }}"
+
+- name: "3. Install NVM if requested"
+  ansible.builtin.include_role:
+    name: your_namespace.terminal.nvm
+  when: "'nvm' in profile_tools"
+
+- name: "4. Install Pyenv if requested"
+  ansible.builtin.include_role:
+    name: your_namespace.terminal.pyenv
+  when: "'pyenv' in profile_tools"
+
+- name: "5. Install Rustup if requested"
+  ansible.builtin.include_role:
+    name: your_namespace.terminal.rustup
+  when: "'rustup' in profile_tools"
