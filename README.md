@@ -38,6 +38,48 @@ For details on how binaries and completions are managed, see `BINARY_MANAGEMENT.
    python3 -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
+
+---
+
+## Using This Collection in Your Ansible Project
+
+To include this collection in your own Ansible repository:
+
+1. **Add to `collections/requirements.yml`:**
+
+   ```yaml
+   ---
+   collections:
+     - name: <your_namespace>.terminal
+       source: <path or URL to this collection>
+   ```
+
+   - If using locally, set `source` to the relative or absolute path.
+   - To install directly from this repository, use the following URL for the `source` field:
+     
+     ```yaml
+     collections:
+       - name: eddiedunn.terminal
+         source: https://github.com/eddiedunn/terminal.git
+     ```
+   - If publishing to Ansible Galaxy, use the Galaxy namespace and collection name.
+
+2. **Install the collection:**
+
+   ```sh
+   ansible-galaxy collection install -r collections/requirements.yml
+   ```
+
+3. **Reference roles from the collection in your playbooks:**
+
+   ```yaml
+   - hosts: all
+     roles:
+       - role: <your_namespace>.terminal.user_setup
+   ```
+
+Replace `<your_namespace>` with the actual namespace (e.g., `eddiedunn`).
+
 3. Stage all required binaries and completions by running:
    ```sh
    python3 roles/user_setup/scripts/download_helper.py roles/user_setup
