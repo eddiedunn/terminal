@@ -22,15 +22,7 @@ user_setup_bin_dir: "{{ ansible_env.HOME }}/.local/bin"
 user_setup_shell_type: "bash" # This is overridden to 'zsh' automatically on macOS by tasks/main.yml
 user_setup_deploy_config_yaml: false
 
-        - xz
-        - zlib
-        - tcl-tk
-    init_snippet: |
-      if [ -d "$HOME/.pyenv" ]; then
-        export PYENV_ROOT="$HOME/.pyenv"
-        command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-      fi
+user_setup_tools:
   - name: starship
     version: "1.18.0"
     description: "The minimal, blazing-fast, and infinitely customizable prompt for any shell."
