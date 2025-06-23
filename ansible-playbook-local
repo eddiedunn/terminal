@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+COLLECTION_DIR="$(dirname "$0")"
+# Parse namespace and name from galaxy.yml
+NAMESPACE=$(awk -F': ' '/^namespace:/ {print $2}' "$COLLECTION_DIR/galaxy.yml" | tr -d '"')
+NAME=$(awk -F': ' '/^name:/ {print $2}' "$COLLECTION_DIR/galaxy.yml" | tr -d '"')
+COLLECTION_NAME="$NAMESPACE-$NAME"
+TARBALL=$(ls "$COLLECTION_DIR"/${COLLECTION_NAME}-*.tar.gz 2>/dev/null | head -n1)
+
+# Step 1: Only build if needed
+NEED_BUILD=0
+if [ ! -f "$TARBALL" ]; then
+  NEED_BUILD=1
+else
+  # Find any relevant source file newer than the tarball
+  NEWER=$(find "$COLLECTION_DIR" \
+    -type f \
+    \( -name '*.yml' -o -name '*.yaml' -o -name '*.py' -o -name '*.md' -o -name '*.j2' -o -name '*.json' -o -name '*.sh' \) \
+    ! -path '*/.venv/*' ! -path '*/.git/*' ! -path '*/.molecule/*' \
+    -newer "$TARBALL" | head -n1)
+  if [ -n "$NEWER" ]; then
+    NEED_BUILD=1
+  fi
+fi
+
+if [ "$NEED_BUILD" -eq 1 ]; then
+  if [ -f "$TARBALL" ]; then
+    echo "[ansible-playbook-local] Removing old collection tarball: $TARBALL"
+    rm -f "$TARBALL"
+  fi
+  echo "[ansible-playbook-local] Building Ansible collection..."
+  ansible-galaxy collection build "$COLLECTION_DIR" --force
+  TARBALL=$(ls "$COLLECTION_DIR"/${COLLECTION_NAME}-*.tar.gz | head -n1)
+  if [ ! -f "$TARBALL" ]; then
+    echo "[ansible-playbook-local] ERROR: Collection build failed, tarball not found."
+    exit 1
+  fi
+else
+  echo "[ansible-playbook-local] Collection tarball is up to date. Skipping build."
+fi
+
+echo "[ansible-playbook-local] Installing Ansible collection from: $TARBALL"
+ansible-galaxy collection install "$TARBALL" --force
+
+# Step 2: Run ansible-playbook with the correct environment
+export ANSIBLE_COLLECTIONS_PATHS=/Users/tmwsiy/code
+
+# Run ansible-playbook with the correct environment
+exec ansible-playbook "$@"

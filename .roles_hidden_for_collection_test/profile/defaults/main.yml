@@ -1,0 +1,16 @@
+---
+# defaults file for your_namespace.terminal.profile
+
+profile_tools:
+  - starship
+  - zoxide
+  - fzf
+
+profile_shells:
+  - bash
+  - zsh
+
+profile_custom_aliases:
+  k: "kubectl"
+profile_environment_variables:
+  EDITOR: "vim"

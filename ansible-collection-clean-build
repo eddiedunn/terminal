@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+# This script guarantees a clean build, install, and test run for the Ansible collection in the current directory.
+# It enforces the minimal, robust pattern proven to work in the minimal test collection.
+
+COLLECTION_DIR="$(dirname "$0")"
+cd "$COLLECTION_DIR"
+
+# Parse namespace and name from galaxy.yml
+galaxy_yml="galaxy.yml"
+NAMESPACE=$(awk -F': ' '/^namespace:/ {print $2}' "$galaxy_yml" | tr -d '"')
+NAME=$(awk -F': ' '/^name:/ {print $2}' "$galaxy_yml" | tr -d '"')
+COLLECTION_NAME="$NAMESPACE-$NAME"
+
+# 1. Ensure roles/ exists
+if [ ! -d roles ]; then
+  echo "[clean-build] ERROR: roles/ directory missing. Cannot proceed."
+  exit 1
+fi
+
+# 2. Remove old tarballs and installed collection
+rm -f ${COLLECTION_NAME}-*.tar.gz
+rm -rf ~/.ansible/collections/ansible_collections/${NAMESPACE}/${NAME}
+
+# 3. Build the collection
+source .venv/bin/activate
+ansible-galaxy collection build . --force
+
+# 4. Install the collection
+ansible-galaxy collection install ./${COLLECTION_NAME}-*.tar.gz --force
+
+# 5. Verify the role is present in the installed collection
+INSTALLED_ROLE_PATH=~/.ansible/collections/ansible_collections/${NAMESPACE}/${NAME}/roles/profile/tasks/main.yml
+if [ ! -f "$INSTALLED_ROLE_PATH" ]; then
+  echo "[clean-build] ERROR: Installed collection is missing roles/profile/tasks/main.yml!"
+  exit 2
+fi
+
+# 6. Run the playbook (pass all arguments through)
+exec ansible-playbook "$@"

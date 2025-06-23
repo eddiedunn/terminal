@@ -25,3 +25,4 @@ roles/*/files/linux/
 # Test caches
 *.moltest_cache.json
 *.cache
+
