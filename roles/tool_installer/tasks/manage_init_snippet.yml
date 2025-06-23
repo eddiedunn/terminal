@@ -1,8 +1,14 @@
 ---
+- name: Ensure shell_init.d directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.config/shell_init.d"
+    state: directory
+    mode: '0755'
+
 - name: "Deploy Bash init snippet for {{ tool.name }}"
   ansible.builtin.template:
     src: tool_init.sh.j2
-    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - loop.index }}_{{ tool.name }}.bash"
+    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - (loop.index | default(99)) }}_{{ tool.name }}.bash"
     mode: '0644'
   vars:
     current_init_snippet: "{{ tool.init_snippet | replace('{shell_type_resolved}', 'bash') }}"
@@ -11,7 +17,7 @@
 - name: "Deploy Zsh init snippet for {{ tool.name }}"
   ansible.builtin.template:
     src: tool_init.sh.j2
-    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - loop.index }}_{{ tool.name }}.zsh"
+    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - (loop.index | default(99)) }}_{{ tool.name }}.zsh"
     mode: '0644'
   vars:
     current_init_snippet: "{{ (tool.init_snippet_zsh | default(tool.init_snippet)) | replace('{shell_type_resolved}', 'zsh') }}"

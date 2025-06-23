@@ -163,8 +163,18 @@ user_setup_tools:
 user_setup_sheldon_plugins:
   - name: zsh-autosuggestions
     github: "zsh-users/zsh-autosuggestions"
-
   - name: zsh-syntax-highlighting
+    github: "zsh-users/zsh-syntax-highlighting"
+  - name: zsh-completions
+    github: "zsh-users/zsh-completions"
+  - name: mac-zsh-completions
+    github: "scriptingosx/mac-zsh-completions"
+    apply: ["source"]
+    when: "ansible_os_family == 'Darwin'"
+  - name: fzf-zsh-plugin
+    github: "junegunn/fzf"
+    apply: ["source"]
+  - name: base16
     github: "zsh-users/zsh-syntax-highlighting"
   - name: zsh-completions
     github: "zsh-users/zsh-completions"

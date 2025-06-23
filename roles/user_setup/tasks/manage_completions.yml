@@ -1,0 +1,30 @@
+---
+# This task file is now idempotent and respects FZF's plugin-based management.
+
+- name: Define shell completion directories
+  ansible.builtin.set_fact:
+    completion_dirs:
+      zsh: ".zsh/completions"
+      bash: ".bash_completion.d"
+      fish: ".config/fish/completions"
+
+- name: Ensure user completions directories exist for active shells
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/{{ completion_dirs[item] }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ terminal_setup_active_shells }}"
+
+- name: Find all staged completion files for each active shell
+  ansible.builtin.find:
+    paths: "{{ role_path }}/files/completions/{{ item }}"
+    patterns: "*"
+  register: found_completions_by_shell
+  loop: "{{ terminal_setup_active_shells }}"
+  delegate_to: localhost
+
+- name: Deploy completion files for each shell
+  ansible.builtin.include_tasks: deploy_shell_completions.yml
+  loop: "{{ found_completions_by_shell.results }}"
+  loop_control:
+    loop_var: shell_result
