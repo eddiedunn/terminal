@@ -3,6 +3,23 @@
 
 tool_installer_tools: []
 
+terminal_setup_tools_defaults:
+  - name: ripgrep
+    version: "14.1.0"
+    install_type: binary
+    binaries:
+      Darwin:
+        x86_64:
+          url: "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-apple-darwin.tar.gz"
+          executable_in_archive: "rg"
+        aarch64:
+          url: "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-aarch64-apple-darwin.tar.gz"
+          executable_in_archive: "rg"
+      Linux:
+        x86_64:
+          url: "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"
+          executable_in_archive: "rg"
+
 tool_installer_definitions:
   # Existing tools ...
   - name: nvm

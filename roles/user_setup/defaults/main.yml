@@ -13,6 +13,9 @@ user_setup_git_name: "Ansible User"
 # Optional: install system dependencies for nvm/pyenv/rustup (see README)
 # user_setup_install_dependencies: false
 
+# Artifact cache for offline/remote installs
+terminal_artifact_cache_dir: "/tmp/terminal-ansible-artifacts"
+
 # Internal variables
 user_setup_managed_block_marker: "# {mark} ANSIBLE MANAGED BLOCK (user_setup)"
 # --- Role Behavior ---

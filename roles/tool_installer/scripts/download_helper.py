@@ -41,7 +41,8 @@ class Downloader:
 
     def __init__(self, role_path: Path):
         self.role_path = role_path
-        self.files_dir = self.role_path / "files"
+        # Use /tmp/terminal-ansible-artifacts as the artifact cache for binaries
+        self.files_dir = Path(os.environ.get("TERMINAL_ANSIBLE_ARTIFACTS_DIR", "/tmp/terminal-ansible-artifacts"))
         self.defaults_file = self.role_path / "defaults" / "main.yml"
         self.checksums_file = self.files_dir / "checksums.yml"
         self.temp_dir = Path(tempfile.gettempdir())
@@ -253,9 +254,10 @@ class Downloader:
             if not src_file.exists():
                 raise FileNotFoundError(f"Could not find '{file_in_archive}' in {archive_path}")
 
+            final_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(src_file, final_path)
             os.chmod(final_path, 0o755)
-            print(f"  - Successfully placed executable at {final_path}")
+            print(f"  - Successfully placed executable at {final_path} [ARTIFACT CACHE]")
             self.changed = True
         except Exception as e:
             print(f"    ERROR: Failed to extract {archive_path}: {e}", file=sys.stderr)

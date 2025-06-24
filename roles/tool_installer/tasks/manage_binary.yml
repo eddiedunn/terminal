@@ -2,8 +2,7 @@
 - name: "Set platform-specific binary facts for {{ tool.name }}"
   ansible.builtin.set_fact:
     tool_bin_src: >-
-      {{ role_path }}/files/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ tool.name }}/{{ tool.version }}/
-      {{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
+      {{ terminal_artifact_cache_dir | default('/tmp/terminal-ansible-artifacts') }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ tool.name }}/{{ tool.version }}/{{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
     tool_bin_dest: "{{ ansible_user_dir }}/.local/bin/{{ tool_executable_name | default(tool.name) }}"
 
 - name: "Check if pre-downloaded binary exists"
@@ -18,3 +17,13 @@
     dest: "{{ tool_bin_dest }}"
     mode: '0755'
   when: tool_bin_stat.stat.exists
+
+# Create 'rg' symlink for ripgrep (UX/artifact cache requirement)
+- name: "Ensure 'rg' symlink points to versioned ripgrep binary (UX/artifact cache requirement)"
+  ansible.builtin.file:
+    src: "{{ tool_bin_dest }}"
+    dest: "{{ ansible_user_dir }}/.local/bin/rg"
+    state: link
+    force: true
+  when: tool.name == 'ripgrep' and tool_bin_stat.stat.exists
+  # Only create/replace if tool is ripgrep and binary exists
