@@ -1,0 +1,25 @@
+---
+# tasks/main.yml for eddiedunn.terminal.env_chassis
+# This role creates the base directory structure required by all other roles.
+
+- name: "env_chassis | Ensure user's primary bin directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: "env_chassis | Ensure shell initialization directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.config/shell_init.d"
+    state: directory
+    mode: '0755'
+
+- name: "env_chassis | Ensure shell completion directories exist"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - ".bash_completion.d"
+    - ".zsh/completions"
+    - ".config/fish/completions"

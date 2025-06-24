@@ -236,7 +236,10 @@ To include this collection in your own Ansible repository:
      ```sh
      ansible-galaxy collection install -r collections/requirements.yml
      ```
+## ⚡ Local Collection Development Best Practices
 
+**1. Always run playbooks from the project root**
+- Do not run playbooks from inside the collection directory. This ensures Ansible resolves roles and collections using the correct local paths.
 2. **Install the collection:**
 
    ```sh

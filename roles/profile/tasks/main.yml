@@ -6,13 +6,15 @@
   ansible.builtin.include_role:
     name: eddiedunn.terminal.system_dependencies
   vars:
+    # Pass the tools we want...
     system_dependencies_tools: "{{ profile_tools }}"
+    # ...and also pass the full definitions list so the role can find dependency data.
+    system_dependencies_all_definitions: "{{ tool_installer_all_definitions }}"
   when: profile_tools | length > 0
 
 - name: "2. Set up base user environment and shell chassis"
   ansible.builtin.include_role:
-  vars:
-    profile_tools: "{{ profile_tools }}" # Pass for conditional logic (e.g., sheldon)
+    name: eddiedunn.terminal.env_chassis
 
 - name: "3. Install binary-based tools via the tool_installer"
   ansible.builtin.include_role:

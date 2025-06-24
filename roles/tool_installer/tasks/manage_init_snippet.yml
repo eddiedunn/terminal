@@ -3,11 +3,7 @@
   ansible.builtin.set_fact:
     shell_init_dir: "{{ ansible_user_dir }}/.config/shell_init.d"
 
-- name: Ensure shell init directory exists
-  ansible.builtin.file:
-    path: "{{ shell_init_dir }}"
-    state: directory
-    mode: '0755'
+
 
 - name: "Deploy shell init snippets for {{ tool.name }}"
   ansible.builtin.template:

@@ -1,4 +1,16 @@
 ---
+- name: Debug collection and role loading paths
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Print current working directory
+      debug:
+        msg: "CWD is {{ lookup('env','PWD') }}"
+    - name: Print role path (if in role context)
+      debug:
+        msg: "Role path is {{ role_path | default('not in role context') }}"
+
 - name: Setup Local Developer Terminal Environment
   hosts: localhost
   connection: local

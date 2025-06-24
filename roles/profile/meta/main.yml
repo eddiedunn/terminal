@@ -1,0 +1,3 @@
+---
+dependencies:
+  - role: eddiedunn.terminal.tool_installer

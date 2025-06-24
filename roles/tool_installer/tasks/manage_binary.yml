@@ -32,18 +32,3 @@
     state: link
     force: true
   when: tool.symlink_as is defined
-
-    - name: "Create/update main symlink to point to versioned binary"
-      ansible.builtin.file:
-        src: "{{ tool_bin_dest_path_versioned }}"
-        dest: "{{ tool_bin_dest_path_unversioned }}"
-        state: link
-        force: true
-
-    - name: "Create/update convenience symlink if defined (e.g. rg -> ripgrep)"
-      ansible.builtin.file:
-        src: "{{ tool_bin_dest_path_unversioned }}"
-        dest: "{{ ansible_user_dir }}/.local/bin/{{ tool.symlink_as }}"
-        state: link
-        force: true
-      when: tool.symlink_as is defined

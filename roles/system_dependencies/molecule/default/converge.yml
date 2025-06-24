@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    # This should be the full list of tool definitions; will be updated after reading tool_installer/defaults/main.yml
+    system_dependencies_all_definitions: {}
+    system_dependencies_tools:
+      - pyenv
+      - nvm
+  roles:
+    - role: eddiedunn.terminal.system_dependencies

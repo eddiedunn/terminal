@@ -1,11 +1,4 @@
 ---
-- name: "Set completion directories fact"
-  ansible.builtin.set_fact:
-    completion_dirs_map:
-      zsh: ".zsh/completions"
-      bash: ".bash_completion.d"
-      fish: ".config/fish/completions"
-
 - name: "Find staged completion files for {{ tool.name }} on controller"
   ansible.builtin.find:
     paths: "{{ role_path }}/files/completions/"
