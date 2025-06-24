@@ -5,23 +5,6 @@
   ansible.builtin.setup:
     filter: ansible_os_family
 
-- name: Install system dependencies for requested tools (Debian/Ubuntu)
-  ansible.builtin.apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: true
-  loop: "{{ lookup('vars', 'system_dependencies_apt_packages') | default([]) }}"
-  when: ansible_facts['os_family'] == 'Debian' and system_dependencies_apt_packages | length > 0
-  become: true
-
-- name: Install system dependencies for requested tools (macOS)
-  community.general.homebrew:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ lookup('vars', 'system_dependencies_brew_packages') | default([]) }}"
-  when: ansible_facts['os_family'] == 'Darwin' and system_dependencies_brew_packages | length > 0
-  become: true
-
 - name: Set apt package list for requested tools
   ansible.builtin.set_fact:
     system_dependencies_apt_packages: "{{ system_dependencies_tools | map('extract', system_dependencies_apt_map) | list | flatten | unique }}"
@@ -57,3 +40,20 @@
       pyenv: ['pyenv']
       rustup: ['rustup-init']
   when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Install system dependencies for requested tools (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop: "{{ lookup('vars', 'system_dependencies_apt_packages') | default([]) }}"
+  when: ansible_facts['os_family'] == 'Debian' and system_dependencies_apt_packages | length > 0
+  become: true
+
+- name: Install system dependencies for requested tools (macOS)
+  community.general.homebrew:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ lookup('vars', 'system_dependencies_brew_packages') | default([]) }}"
+  when: ansible_facts['os_family'] == 'Darwin' and system_dependencies_brew_packages | length > 0
+  become: true

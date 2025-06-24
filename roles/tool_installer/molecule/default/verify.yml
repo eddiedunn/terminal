@@ -1,7 +1,32 @@
 ---
 - name: Verify tool_installer role
   hosts: all
+  become: false
   tasks:
+    - name: "Verify | fzf binary is installed"
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.local/bin/fzf"
+      register: fzf_bin
+      failed_when: not fzf_bin.stat.islnk
+
+    - name: "Verify | rg symlink for ripgrep exists"
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.local/bin/rg"
+      register: rg_bin
+      failed_when: not rg_bin.stat.islnk
+
+    - name: "Verify | fzf init snippet exists for bash"
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.config/shell_init.d/99-fzf.bash"
+      register: fzf_init_bash
+      failed_when: not fzf_init_bash.stat.exists
+
+    - name: "Verify | fzf completions exist for zsh"
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.zsh/completions/_fzf"
+      register: fzf_comp_zsh
+      failed_when: not fzf_comp_zsh.stat.exists
+
     - name: Check that binaries are installed
       ansible.builtin.stat:
         path: "{{ ansible_user_dir }}/.local/bin/{{ item }}"

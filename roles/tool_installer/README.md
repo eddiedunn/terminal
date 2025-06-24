@@ -6,13 +6,12 @@ This role is part of the `eddiedunn.terminal` collection and is the **single sou
 - Defines all tool metadata in `defaults/main.yml` (`terminal_setup_tools_defaults` or `tool_installer_definitions`).
 - Stores completions metadata in `files/completions_metadata.yml`.
 - Stages all binaries in a controller-local artifact cache using the canonical `download_helper.py` script.
-- Installs binaries to `~/.local/bin`, completions to the appropriate directories, and shell init snippets to `~/.config/shell_init.d/`.
 
 ## Artifact Cache & Binary Install Workflow
 
 ### 1. Tool Metadata Definition
 - All tool metadata is defined in `defaults/main.yml` under `terminal_setup_tools_defaults`.
-- Each tool entry specifies:
+- Each tool specifies:
   - `name`, `version`, `install_type` (must be `binary` for binaries)
   - `binaries` section, mapping OS/arch to download URLs and archive details.
 
@@ -53,4 +52,3 @@ This role is part of the `eddiedunn.terminal` collection and is the **single sou
 ## Reference
 - See `BINARY_MANAGEMENT.md` and `CROSS_PLATFORM_BINARY_DISCUSSION.md` for the authoritative design and data model for binaries and completions.
 
-This role replaces all previous tool installation logic from `user_setup` and should be the only location for tool and completion management logic.

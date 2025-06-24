@@ -2,19 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-Ansible terminal_setup role binary download helper.
+Ansible terminal collection binary and completions download helper.
 
 This script is designed to be called from an Ansible playbook on the controller.
-It reads tool definitions from the role's defaults/main.yml, downloads the
-necessary binaries, and places them in the role's files/ directory.
+It populates a local artifact cache (default: /tmp/terminal-ansible-artifacts)
+with tool binaries and shell completion scripts.
 
-It automates checksum verification by:
-1. Using a `checksum_url` if provided for a direct checksum file.
-2. Parsing a release-wide checksum file (e.g., sha256sums.txt) if configured.
-3. Calculating the SHA256 sum if no official one is available.
+Workflow:
+1. Reads tool definitions from the role's `defaults/main.yml`.
+2. For each binary tool, it downloads the archive, verifies its checksum, and
+   extracts the executable into a versioned path within the artifact cache.
+3. Reads completion definitions from `files/completions_metadata.yml`.
+4. Generates or downloads completion scripts, staging them in the role's `files/`
+   directory for Ansible to copy to the target host.
 
-All fetched/calculated checksums are cached in `files/checksums.yml` to speed
-up subsequent runs and enable offline operation.
+Checksums are cached in `checksums.yml` within the artifact cache to speed up
+subsequent runs and enable offline operation.
 """
 
 import argparse
@@ -58,7 +61,8 @@ class Downloader:
         tools = self.defaults.get("terminal_setup_tools", None)
         if not tools:
             print("[DEBUG] 'terminal_setup_tools' not found in YAML. Falling back to 'terminal_setup_tools_defaults'.")
-            tools = self.defaults.get("terminal_setup_tools_defaults", [])
+            # Use the canonical tool list from the architectural review
+        tools = self.defaults.get("tool_installer_all_definitions", [])
         for tool in tools:
             if not isinstance(tool, dict):
                 print(f"[SKIP] Non-dict entry in tools list: {repr(tool)} (type: {type(tool)})")
@@ -151,7 +155,11 @@ class Downloader:
 #         archive_path.unlink()
 
     def _determine_checksum(self, tool, details, archive_filename, url):
-        """Finds the checksum from remote or calculates it."""
+        """Finds the checksum for a binary using a prioritized strategy:
+        1. Direct checksum URL if provided
+        2. Release-wide checksums file if available
+        3. Download and calculate SHA256 if all else fails
+        """
         version = str(tool["version"])
         
         # Strategy 1: Direct checksum URL
@@ -176,7 +184,7 @@ class Downloader:
                     if archive_filename in line:
                         return f"sha256:{line.split(' ')[0].strip()}"
 
-        # Strategy 3: Calculate it ourselves
+        # Strategy 3: Download and calculate SHA256 locally
         print(f"  - No remote checksum found. Calculating for {archive_filename}.")
         archive_path = self._download_file(url, archive_filename)
         if not archive_path:
@@ -229,7 +237,10 @@ class Downloader:
         return None
 
     def _extract_and_copy(self, archive_path, file_in_archive, final_path):
-        """Extracts an executable from an archive and copies it to the final destination."""
+        """
+        Extracts an executable from an archive and copies it to the final destination.
+        Handles .tar.gz, .tgz, .zip, and raw binaries. Searches for the file in nested directories if needed.
+        """
         extract_dir = self.temp_dir / f"extract-{archive_path.stem}"
         extract_dir.mkdir(exist_ok=True)
         

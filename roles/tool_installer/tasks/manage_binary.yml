@@ -3,7 +3,8 @@
   ansible.builtin.set_fact:
     tool_bin_src: >-
       {{ terminal_artifact_cache_dir | default('/tmp/terminal-ansible-artifacts') }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ tool.name }}/{{ tool.version }}/{{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
-    tool_bin_dest: "{{ ansible_user_dir }}/.local/bin/{{ tool_executable_name | default(tool.name) }}"
+    tool_bin_dest_versioned: "{{ ansible_user_dir }}/.local/bin/{{ tool.executable_name | default(tool.name) }}-{{ tool.version }}"
+    tool_bin_dest_unversioned: "{{ ansible_user_dir }}/.local/bin/{{ tool.executable_name | default(tool.name) }}"
 
 - name: "Check if pre-downloaded binary exists"
   ansible.builtin.stat:
@@ -14,16 +15,35 @@
 - name: "Copy binary to user's bin directory for {{ tool.name }}"
   ansible.builtin.copy:
     src: "{{ tool_bin_src }}"
-    dest: "{{ tool_bin_dest }}"
+    dest: "{{ tool_bin_dest_versioned }}"
     mode: '0755'
-  when: tool_bin_stat.stat.exists
 
-# Create 'rg' symlink for ripgrep (UX/artifact cache requirement)
-- name: "Ensure 'rg' symlink points to versioned ripgrep binary (UX/artifact cache requirement)"
+- name: "Create/update main symlink to point to versioned binary"
   ansible.builtin.file:
-    src: "{{ tool_bin_dest }}"
-    dest: "{{ ansible_user_dir }}/.local/bin/rg"
+    src: "{{ tool_bin_dest_versioned }}"
+    dest: "{{ tool_bin_dest_unversioned }}"
     state: link
     force: true
-  when: tool.name == 'ripgrep' and tool_bin_stat.stat.exists
-  # Only create/replace if tool is ripgrep and binary exists
+
+- name: "Create/update convenience symlink if defined (e.g. rg -> ripgrep)"
+  ansible.builtin.file:
+    src: "{{ tool_bin_dest_unversioned }}"
+    dest: "{{ ansible_user_dir }}/.local/bin/{{ tool.symlink_as }}"
+    state: link
+    force: true
+  when: tool.symlink_as is defined
+
+    - name: "Create/update main symlink to point to versioned binary"
+      ansible.builtin.file:
+        src: "{{ tool_bin_dest_path_versioned }}"
+        dest: "{{ tool_bin_dest_path_unversioned }}"
+        state: link
+        force: true
+
+    - name: "Create/update convenience symlink if defined (e.g. rg -> ripgrep)"
+      ansible.builtin.file:
+        src: "{{ tool_bin_dest_path_unversioned }}"
+        dest: "{{ ansible_user_dir }}/.local/bin/{{ tool.symlink_as }}"
+        state: link
+        force: true
+      when: tool.symlink_as is defined

@@ -16,7 +16,6 @@ This document explains how shell completions are managed in this role for Zsh, B
 
 ### 1. Download Step
 - Edit `files/completions_metadata.yml` to add or update completions for any tool or shell.
-- Run the download helper script (e.g., `python3 roles/user_setup/scripts/download_helper.py roles/user_setup`).
 - The script will:
   - Download all required binaries (from `defaults/main.yml`).
   - Parse `files/completions_metadata.yml` for completions for each tool and shell.
@@ -25,7 +24,6 @@ This document explains how shell completions are managed in this role for Zsh, B
     - If `method: url`, downloads the completion script from the upstream URL.
     - If `method: archive`, (future) will extract from the tool's archive.
     - If `method: plugin` or `none`, does nothing (handled by plugin manager or not needed).
-  - Stages all completions in `roles/user_setup/files/completions/<shell>/`.
   - As of the current implementation, for zoxide, any 'eval' lines are stripped from the generated zoxide.zsh completion file to avoid double initialization.
 
 ### 2. Role Install Step

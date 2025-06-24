@@ -1,6 +1,5 @@
 # Ansible Role: system_dependencies
 
-This role installs system-level dependencies required for userland tools such as nvm, pyenv, and rustup. It is designed to be used alongside the `user_setup` role in the terminal collection.
 
 ## Supported Platforms
 - Debian/Ubuntu (via `apt`)
@@ -20,7 +19,6 @@ This role installs system-level dependencies required for userland tools such as
           - nvm
           - pyenv
           - rustup
-    - role: user_setup
       vars:
         terminal_setup_profile_tools:
           - nvm

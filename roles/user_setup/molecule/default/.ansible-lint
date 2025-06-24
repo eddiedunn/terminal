@@ -1,3 +1,0 @@
----
-# ansible-lint configuration file for user_setup role
-skip_list: []

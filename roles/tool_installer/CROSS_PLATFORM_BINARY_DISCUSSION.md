@@ -17,4 +17,3 @@
 - See `BINARY_MANAGEMENT.md` for the current data model and process.
 - All logic and data now live in the `tool_installer` role.
 
-This document replaces prior discussions in `user_setup`.

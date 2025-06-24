@@ -1,0 +1,101 @@
+---
+- name: Setup Local Developer Terminal Environment
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  # ----------------------------------------------------------------------
+  # This playbook orchestrates the entire terminal setup on a local machine.
+  # It automatically handles caching of binaries for offline/fast runs.
+  #
+  # USAGE: ansible-playbook playbooks/local_setup.yml
+  #
+  # CUSTOMIZATION:
+  #   - Edit 'profile_tools' to add/remove tools.
+  #     in your inventory to set your Git identity.
+  # ----------------------------------------------------------------------
+
+  vars_files:
+    - "{{ playbook_dir }}/../roles/profile/defaults/main.yml"
+
+  vars:
+    # --- Override defaults here ---
+    profile_tools:
+      - starship
+      - sheldon
+      - fzf
+      - bat
+      - eza
+      - ripgrep
+      - zoxide
+      - direnv
+      - nvm
+      - pyenv
+      - uv
+      - rustup
+
+    # IMPORTANT: Override these with your personal details!
+
+  pre_tasks:
+    - name: "Pre-flight | Set architecture fact"
+      ansible.builtin.set_fact:
+        ansible_architecture_normalized: "{{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'x86_64' }}"
+
+    - name: "Pre-flight | Load tool definitions"
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../roles/tool_installer/defaults/main.yml"
+        name: tool_defs
+
+    - name: "Pre-flight | Get definitions for required binary tools"
+      ansible.builtin.set_fact:
+        required_tools: >-
+          {{ tool_defs.tool_installer_definitions
+              | selectattr('name', 'in', profile_tools)
+              | selectattr('install_type', 'eq', 'binary')
+              | selectattr('binaries.' + ansible_system + '.' + ansible_architecture_normalized, 'defined')
+              | list }}
+
+    - name: "Pre-flight | Check artifact cache for required binaries"
+      ansible.builtin.stat:
+        path: "{{ tool_defs.terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+      loop: "{{ required_tools }}"
+      delegate_to: localhost
+      register: cache_check
+
+    - name: "Pre-flight | Identify missing binaries"
+      ansible.builtin.set_fact:
+        missing_binaries: "{{ cache_check.results | rejectattr('stat.exists') | map(attribute='item') | list }}"
+
+    - name: "Cache | Populate artifact cache if binaries are missing"
+      when: missing_binaries | length > 0
+      block:
+        - name: "Cache | The following binaries will be downloaded"
+          ansible.builtin.debug:
+            msg: "{{ missing_binaries | map(attribute='name') | list | join(', ') }}"
+
+        - name: "Cache | Run download helper script"
+          ansible.builtin.include_role:
+            name: "eddiedunn.terminal.tool_installer"
+            tasks_from: "download_binaries.yml"
+          vars:
+            role_path: "{{ playbook_dir }}/../roles/tool_installer"
+
+        - name: "Cache | Re-verify cache after download attempt"
+          ansible.builtin.stat:
+            path: "{{ tool_defs.terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+          loop: "{{ missing_binaries }}"
+          delegate_to: localhost
+          register: final_cache_check
+
+        - name: "Cache | Fail if binaries are still missing"
+          ansible.builtin.fail:
+            msg: |
+              The following binaries are still missing from the artifact cache ({{ tool_defs.terminal_artifact_cache_dir }}):
+              {% for res in final_cache_check.results if not res.stat.exists %}
+              - {{ res.item.name }} (v{{ res.item.version }})
+              {% endfor %}
+              Please check your network connection or the tool's release assets.
+          when: final_cache_check.results | selectattr('stat.exists', 'equalto', false) | list | length > 0
+
+  roles:
+    - role: eddiedunn.terminal.profile

@@ -66,6 +66,8 @@ completions:
           patterns:
             - "eval "
             - "zoxide init"
+            # The `zoxide init` command outputs a full script including a call to itself.
+            # We remove these lines for the same reason as above: our shell setup sources directly.
     fish:
       method: cli
       command: "zoxide init fish --cmd z"
@@ -74,6 +76,8 @@ completions:
         - type: "remove_lines_with_patterns"
           patterns:
             - "zoxide init"
+            # The `zoxide init` command outputs a full script including a call to itself.
+            # We remove these lines for the same reason as above: our shell setup sources directly.
   - name: direnv
     zsh:
       method: none

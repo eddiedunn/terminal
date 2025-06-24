@@ -5,7 +5,7 @@
 ## What Has Been Done
 
 - **Initialized a new Ansible collection** at `~/your-project-dir/terminal` for modular, open-source terminal automation.
-- **Created modular role directories**: `user_setup`, `tool_installer`, `nvm`, `pyenv`, `rustup`, and `profile`.
+- **Created modular role directories**: `tool_installer`, `nvm`, `pyenv`, `rustup`, and `profile`.
 - **Copied the original role's contents** as a starting point for modularization.
 - **Added collection metadata** (`galaxy.yml`) and `.gitignore`.
 - **Prepared for migration of documentation and further refactoring.**

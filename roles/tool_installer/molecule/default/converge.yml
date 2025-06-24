@@ -1,20 +1,16 @@
 ---
-- name: Converge tool_installer role with minimal and enabled tools
+- name: Converge tool_installer role
   hosts: all
-  become: true
-  gather_facts: false
-
   vars:
-    ansible_user_dir: "/root"
     tool_installer_tools:
-      - starship
-      - eza
       - fzf
+      - ripgrep
     tool_installer_shells:
       - bash
       - zsh
+  roles:
+    - role: eddiedunn.terminal.tool_installer
 
-  pre_tasks:
     - name: Install Python and requirements
       ansible.builtin.raw: |
         set -e

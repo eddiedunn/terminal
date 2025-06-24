@@ -1,4 +1,160 @@
-# Terminal Automation Ansible Collection
+# Terminal Ansible Collection
+
+A modular Ansible collection to configure a modern, cross-platform terminal environment with your favorite userland tools, dotfiles, and developer shell workflows.
+
+## Features
+
+- **Declarative Tool Management**: Define your desired tools and versions in a single YAML file.
+- **Controller-Side Artifact Cache**: Binaries are downloaded and verified once on the controller, enabling fast, reproducible, and offline-capable deployments to multiple hosts.
+- **Cross-Platform**: Natively supports Linux (Debian/Ubuntu) and macOS (aarch64/x86_64).
+- **Robust Shell Integration**: Idempotently manages shell initialization scripts, completions, and environment variables without mangling user `.*rc` files.
+- **Extensible**: Easily add new tools, completions, or even entire installation roles (like `nvm` or `pyenv`).
+- **Orchestrated Profiles**: The `profile` role acts as a simple, high-level interface to compose your perfect terminal environment.
+
+---
+
+## Quick Start (Local Setup)
+
+This playbook will configure the terminal for the current user on your local machine.
+
+1.  **Prerequisites**: Ensure you have Python, `pip`, and `venv` installed.
+2.  **Clone the Repository**:
+    ```sh
+    git clone https://github.com/eddiedunn/terminal.git
+    cd terminal
+    ```
+3.  **Set up the Environment**:
+    ```sh
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    ```
+4.  **Run the Local Setup Playbook**:
+    ```sh
+    ansible-playbook playbooks/local_setup.yml
+    ```
+    This command will automatically:
+    - Build and install the collection locally.
+    - Run the `download_helper.py` script to stage all necessary binaries.
+    - Execute the Ansible playbook to configure your system.
+
+---
+
+## Architecture Overview
+
+This collection is designed with a clear separation of concerns:
+
+1.  **Artifact Staging (Controller)**: The `download_helper.py` script is executed first on the Ansible controller. It reads tool definitions from `roles/tool_installer/defaults/main.yml` and `roles/tool_installer/files/completions_metadata.yml`, downloads all required binaries and completion scripts, verifies their checksums, and places them into an artifact cache (default: `/tmp/terminal-ansible-artifacts`). This makes subsequent runs fast and enables offline provisioning.
+
+2.  **Orchestration (`profile` role)**: This is the main entry point. It orchestrates other roles based on the tools you've defined in the `profile_tools` variable.
+
+3.  **Core Engines (`tool_installer`, `nvm`, etc.)**:
+    - `tool_installer`: Copies pre-staged binaries and completions from the controller's cache to the target machine. It also deploys shell initialization snippets.
+    - `system_dependencies`: Installs system-level packages (e.g., `build-essential`) required by other roles.
+    - `nvm`, `pyenv`, `rustup`: Handle tools that require script-based git checkouts and have their own initialization logic.
+
+---
+
+## Customization
+
+To customize your setup, edit `playbooks/local_setup.yml` (or your own playbook) and modify the `vars` section:
+
+```yaml
+# playbooks/local_setup.yml
+- name: Setup Local Terminal Environment
+  hosts: localhost
+  connection: local
+  vars:
+    # 1. Define which tools you want to install
+    profile_tools:
+      - starship
+      - sheldon
+      - fzf
+      - bat
+      - eza
+      - ripgrep
+      - zoxide
+      - direnv
+      - nvm  # Example of a script-based installer
+
+    # 2. Define which shells to configure
+    profile_shells:
+      - bash
+      - zsh
+
+    # 3. Add custom aliases and environment variables
+    profile_custom_aliases:
+      k: "kubectl"
+      l: "eza -l"
+    profile_environment_variables:
+      EDITOR: "nvim"
+      # ...
+```
+
+---
+
+## For Developers & Contributors
+
+- **Testing**: Each role includes a `molecule` scenario for independent testing.
+  ```sh
+  # Activate venv first!
+  source .venv/bin/activate
+  # Test a specific role
+  cd roles/tool_installer
+  molecule test
+  ```
+- **Binary Management**: For details on how binaries, checksums, and completions are managed, see `roles/tool_installer/README.md`.
+- **Linting**: Run all linters with the helper script:
+  ```sh
+  ./scripts/lint_all.sh
+  ```
+
+---
+
+### A Note on `eza` for macOS
+
+The official `eza` project does not currently distribute pre-built binaries for Darwin (macOS). To provide a seamless out-of-the-box experience, this collection uses a public fork ([eddiedunn/eza](https://github.com/eddiedunn/eza)) that builds and releases these binaries. The source and build process are fully transparent. Should the official project begin publishing Darwin binaries, this collection will be updated to use them.
+
+
+## Quickstart
+
+1. **Clone the repo**
+2. **Create and activate the Python virtual environment**
+   ```sh
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Run the local setup playbook**
+   ```sh
+   ansible-playbook playbooks/local_setup.yml
+   ```
+
+## Architecture Overview
+
+- **tool_installer**: The engine. Installs tools, manages binaries, and drops shell init scripts.
+- ****: The chassis. Prepares user directories, dotfiles, and configures the shell to source init scripts.
+- **profile**: The blueprint. Orchestrates the other roles and defines the user-facing entry point.
+
+## Documentation
+- See `docs/BINARY_MANAGEMENT.md` for binary caching and reproducibility.
+- See `docs/COMPLETIONS_WORKFLOW.md` for shell completions and FZF integration.
+
+## Customization
+- Edit `playbooks/local_setup.yml` to add/remove tools or configure shells, aliases, and environment variables.
+- Override variables in your inventory or on the command line as needed.
+
+## Testing
+- Each role includes a `molecule` scenario for independent testing:
+  ```sh
+  cd roles/tool_installer && molecule test
+  cd roles/ && molecule test
+  ```
+
+---
+
+For advanced usage and details, see the `docs/` directory and each role's README.md.
+
 
 **IMPORTANT: Activate the Python Virtual Environment Before Running Any Commands!**
 
@@ -13,7 +169,7 @@ This is required for all development, testing, and CI. If you skip this step, co
 ---
 
 ## Project Structure
-- Modular Ansible roles: `user_setup`, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
+- Modular Ansible roles: ``, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
 - Collection metadata: `galaxy.yml`, `.gitignore`
 
 ---
@@ -92,14 +248,14 @@ To include this collection in your own Ansible repository:
    ```yaml
    - hosts: all
      roles:
-       - role: <your_namespace>.terminal.user_setup
+       - role: <your_namespace>.terminal.
    ```
 
 Replace `<your_namespace>` with the actual namespace (e.g., `eddiedunn`).
 
 3. Stage all required binaries and completions by running:
    ```sh
-   python3 roles/user_setup/scripts/download_helper.py roles/user_setup
+   python3 roles//scripts/download_helper.py roles/
    ```
    This will read `defaults/main.yml` and `files/completions_metadata.yml`, download all binaries, and stage completions for all supported shells.
    - As of the current implementation, for zoxide, any 'eval' lines are stripped from the generated zoxide.zsh completion file to avoid double initialization.

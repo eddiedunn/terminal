@@ -1,11 +1,19 @@
 ---
-# defaults file for your_namespace.terminal.profile
+# defaults file for eddiedunn.terminal.profile
 
+# Defines the list of tools to be installed.
+# This list is passed to the tool_installer role.
 profile_tools:
   - starship
-  - zoxide
+  - sheldon
   - fzf
+  - bat
+  - eza
+  - ripgrep
+  - zoxide
+  - direnv
 
+# Defines which shells to configure.
 profile_shells:
   - bash
   - zsh

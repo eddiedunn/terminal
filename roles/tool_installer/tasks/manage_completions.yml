@@ -1,25 +1,25 @@
 ---
-- name: Find staged completion files for {{ tool.name }}
+- name: "Set completion directories fact"
+  ansible.builtin.set_fact:
+    completion_dirs_map:
+      zsh: ".zsh/completions"
+      bash: ".bash_completion.d"
+      fish: ".config/fish/completions"
+
+- name: "Find staged completion files for {{ tool.name }} on controller"
   ansible.builtin.find:
-    paths: "{{ role_path }}/files/completions/{{ shell_name }}/"
-    patterns: "{{ tool.name }}.*"
+    paths: "{{ role_path }}/files/completions/"
+    patterns: "{{ tool.name }}.*,*{{ tool.name }}*,_{{ tool.name }}"
+    recurse: true
   register: found_completions
-  loop: "{{ tool_installer_shells }}"
-  loop_control:
-    loop_var: shell_name
   delegate_to: localhost
 
 - name: "Deploy completion files for {{ tool.name }}"
   ansible.builtin.copy:
-    src: "{{ item.1.path }}"
-    dest: "{{ ansible_user_dir }}/{{ completion_dirs[item.0] }}/{{ item.1.path | basename }}"
+    src: "{{ item.path }}"
+    dest: "{{ ansible_user_dir }}/{{ completion_dirs_map[item.path | dirname | basename] }}/{{ item.path | basename }}"
     mode: '0644'
-  loop: "{{ tool_installer_shells | product(found_completions.results | map(attribute='files') | flatten) | list }}"
+  loop: "{{ found_completions.files }}"
   loop_control:
-    label: "{{ item.1.path | basename }}"
-  when: "item.0 in item.1.path"
-  vars:
-    completion_dirs:
-      zsh: ".zsh/completions"
-      bash: ".bash_completion.d"
-      fish: ".config/fish/completions"
+    label: "{{ item.path | basename }}"
+  when: "(item.path | dirname | basename) in tool_installer_shells"
