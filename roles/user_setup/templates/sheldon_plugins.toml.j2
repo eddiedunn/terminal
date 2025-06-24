@@ -12,14 +12,18 @@ bash = true
 
 # Plugins section
 [plugins]
+{% set seen = [] %}
 {% for plugin in terminal_setup_sheldon_plugins %}
-  # {{ plugin.name }}
-  {% if plugin.when is defined and plugin.when %}
-  {% if plugin.when | bool %}
-  {{ plugin.name }} = { {% if plugin.github is defined %}github = "{{ plugin.github }}"{% endif %}{% if plugin.apply is defined %}, apply = {{ plugin.apply | to_json }}{% endif %} }
-  {% endif %}
-  {% else %}
-  {{ plugin.name }} = { {% if plugin.github is defined %}github = "{{ plugin.github }}"{% endif %}{% if plugin.apply is defined %}, apply = {{ plugin.apply | to_json }}{% endif %} }
+  {% if plugin.name not in seen %}
+    # {{ plugin.name }}
+    {% if plugin.when is defined and plugin.when %}
+      {% if plugin.when | bool %}
+        {{ plugin.name }} = { {% if plugin.github is defined %}github = "{{ plugin.github }}"{% endif %}{% if plugin.apply is defined %}, apply = {{ plugin.apply | to_json }}{% endif %} }
+      {% endif %}
+    {% else %}
+      {{ plugin.name }} = { {% if plugin.github is defined %}github = "{{ plugin.github }}"{% endif %}{% if plugin.apply is defined %}, apply = {{ plugin.apply | to_json }}{% endif %} }
+    {% endif %}
+    {% set _ = seen.append(plugin.name) %}
   {% endif %}
 {% endfor %}
 
