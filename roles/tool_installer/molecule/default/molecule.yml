@@ -16,8 +16,7 @@ provisioner:
 verifier:
   name: ansible
 
-lint:
-  name: yamllint
+lint: yamllint
 
 scenario:
   name: default

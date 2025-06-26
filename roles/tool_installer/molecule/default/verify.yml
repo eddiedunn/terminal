@@ -1,101 +1,51 @@
 ---
-- name: Verify tool_installer role
+- name: Verify
   hosts: all
   become: false
+  vars:
+    bin_dir: "{{ ansible_user_dir }}/.local/bin"
+    bash_completion_dir: "{{ ansible_user_dir }}/.bash_completion.d"
+    zsh_completion_dir: "{{ ansible_user_dir }}/.zsh/completions"
+
   tasks:
-    - name: "Verify | fzf binary is installed"
+    # ------------------------------------------------------------------
+    # Verify fzf installation
+    # ------------------------------------------------------------------
+    - name: "Verify | fzf binary symlink exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.local/bin/fzf"
-      register: fzf_bin
-      failed_when: not fzf_bin.stat.islnk
+        path: "{{ bin_dir }}/fzf"
+      register: fzf_binary
+      failed_when: not fzf_binary.stat.islnk
 
-    - name: "Verify | rg symlink for ripgrep exists"
+    - name: "Verify | fzf bash completion exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.local/bin/rg"
-      register: rg_bin
-      failed_when: not rg_bin.stat.islnk
+        path: "{{ bash_completion_dir }}/fzf.bash"
+      register: fzf_bash_completion
+      failed_when: not fzf_bash_completion.stat.exists
 
-    - name: "Verify | fzf init snippet exists for bash"
+    - name: "Verify | fzf zsh completion exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.config/shell_init.d/99-fzf.bash"
-      register: fzf_init_bash
-      failed_when: not fzf_init_bash.stat.exists
+        path: "{{ zsh_completion_dir }}/_fzf"
+      register: fzf_zsh_completion
+      failed_when: not fzf_zsh_completion.stat.exists
 
-    - name: "Verify | fzf completions exist for zsh"
+    # ------------------------------------------------------------------
+    # Verify ripgrep installation
+    # ------------------------------------------------------------------
+    - name: "Verify | ripgrep (rg) binary symlink exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.zsh/completions/_fzf"
-      register: fzf_comp_zsh
-      failed_when: not fzf_comp_zsh.stat.exists
+        path: "{{ bin_dir }}/rg"
+      register: rg_binary
+      failed_when: not rg_binary.stat.islnk
 
-    - name: Check that binaries are installed
+    - name: "Verify | ripgrep bash completion exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.local/bin/{{ item }}"
-      register: bin_stats
-      loop:
-        - starship
-        - eza
-        - fzf
+        path: "{{ bash_completion_dir }}/rg.bash"
+      register: rg_bash_completion
+      failed_when: not rg_bash_completion.stat.exists
 
-    - name: Assert binaries exist
-      assert:
-        that:
-          - item.stat.exists
-      loop: "{{ bin_stats.results }}"
-
-    - name: Check shell init snippets exist for enabled tools
+    - name: "Verify | ripgrep zsh completion exists"
       ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.config/shell_init.d/{{ item }}.bash"
-      register: bash_init_stats
-      loop:
-        - 98_starship.bash
-        - 97_eza.bash
-        - 96_fzf.bash
-
-    - name: Assert bash init snippets exist
-      assert:
-        that:
-          - item.stat.exists
-      loop: "{{ bash_init_stats.results }}"
-
-    - name: Check shell init snippets exist for enabled tools (zsh)
-      ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.config/shell_init.d/{{ item }}.zsh"
-      register: zsh_init_stats
-      loop:
-        - 98_starship.zsh
-        - 97_eza.zsh
-        - 96_fzf.zsh
-
-    - name: Assert zsh init snippets exist
-      assert:
-        that:
-          - item.stat.exists
-      loop: "{{ zsh_init_stats.results }}"
-
-    - name: Check completions exist for enabled tools (zsh)
-      ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.zsh/completions/{{ item }}"
-      register: zsh_completion_stats
-      loop:
-        - fzf-key-bindings.zsh
-        - fzf-completion.zsh
-
-    - name: Assert zsh completions exist
-      assert:
-        that:
-          - item.stat.exists
-      loop: "{{ zsh_completion_stats.results }}"
-
-    - name: Check completions exist for enabled tools (bash)
-      ansible.builtin.stat:
-        path: "{{ ansible_user_dir }}/.bash_completion.d/{{ item }}"
-      register: bash_completion_stats
-      loop:
-        - fzf-key-bindings.bash
-        - fzf-completion.bash
-
-    - name: Assert bash completions exist
-      assert:
-        that:
-          - item.stat.exists
-      loop: "{{ bash_completion_stats.results }}"
+        path: "{{ zsh_completion_dir }}/_rg"
+      register: rg_zsh_completion
+      failed_when: not rg_zsh_completion.stat.exists

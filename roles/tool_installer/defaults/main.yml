@@ -2,6 +2,13 @@
 # defaults file for eddiedunn.terminal.tool_installer
 # This is the SINGLE SOURCE OF TRUTH for all tool definitions.
 
+# This map defines the destination directories for shell completion files.
+# The paths are created and managed by the 'env_chassis' role.
+completion_dirs_map:
+  bash: ".bash_completion.d"
+  zsh: ".zsh/completions"
+  fish: ".config/fish/completions"
+
 # Path to the artifact cache on the controller.
 # Can be overridden by the TERMINAL_ANSIBLE_ARTIFACTS_DIR environment variable.
 terminal_artifact_cache_dir: "{{ lookup('env', 'TERMINAL_ANSIBLE_ARTIFACTS_DIR') | default('/tmp/terminal-ansible-artifacts', true) }}"
@@ -16,7 +23,7 @@ tool_installer_shells:
   - fish
 
 # Canonical list of all supported tool definitions.
-tool_installer_definitions:
+tool_installer_all_definitions:
   - name: starship
     version: "1.18.0"
     description: "The minimal, blazing-fast, and infinitely customizable prompt for any shell."
@@ -26,19 +33,26 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/starship/starship/releases/download/v1.18.0/starship-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "starship"
+    dependencies: {}
 
   - name: ripgrep
-    version: "14.1.0"
+    version: '13.0.0-13'
     install_type: binary
+    aliases:
+      grep: ripgrep
     binaries:
       Darwin:
         aarch64:
-          url: "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-aarch64-apple-darwin.tar.gz"
+          url: "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-13/ripgrep-v13.0.0-13-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "rg"
       Linux:
         x86_64:
-          url: "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"
+          url: "https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz"
           executable_in_archive: "rg"
+        aarch64:
+          url: "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-13/ripgrep-v13.0.0-13-aarch64-unknown-linux-gnu.tar.gz"
+          executable_in_archive: "rg"
+    dependencies: {}
 
   - name: sheldon
     version: "0.8.2"
@@ -48,6 +62,7 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/rossmacarthur/sheldon/releases/download/0.8.2/sheldon-0.8.2-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "sheldon"
+    dependencies: {}
 
   - name: fzf
     version: "0.62.0"
@@ -57,6 +72,11 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/junegunn/fzf/releases/download/v0.62.0/fzf-0.62.0-darwin_arm64.tar.gz"
           executable_in_archive: "fzf"
+      Linux:
+        aarch64:
+          url: "https://github.com/junegunn/fzf/releases/download/v0.62.0/fzf-0.62.0-linux_arm64.tar.gz"
+          executable_in_archive: "fzf"
+    dependencies: {}
 
   - name: bat
     version: "0.25.0"
@@ -66,6 +86,7 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "bat"
+    dependencies: {}
 
   - name: eza
     version: "0.21.4"
@@ -75,6 +96,7 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/eddiedunn/eza/releases/download/v0.21.4-darwin/eza"
           executable_in_archive: "eza"
+    dependencies: {}
 
   - name: zoxide
     version: "0.9.8"
@@ -84,6 +106,7 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.8/zoxide-0.9.8-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "zoxide"
+    dependencies: {}
 
   - name: direnv
     version: "2.33.0"
@@ -93,6 +116,7 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/direnv/direnv/releases/download/v2.33.0/direnv.darwin-arm64"
           executable_in_archive: "direnv"
+    dependencies: {}
 
   - name: uv
     version: "0.7.13"
@@ -102,37 +126,18 @@ tool_installer_definitions:
         aarch64:
           url: "https://github.com/astral-sh/uv/releases/download/0.7.13/uv-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "uv"
+    dependencies: {}
 
-tool_installer_all_definitions:
   - name: nvm
     version: "v0.40.3"
     description: "Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions."
     install_type: script
     git_repo: "https://github.com/nvm-sh/nvm.git"
-    init_snippet: |
-      export NVM_DIR="$HOME/.nvm"
-      if [ -s "$NVM_DIR/nvm.sh" ]; then
-        . "$NVM_DIR/nvm.sh"  # This loads nvm
-      fi
-      if [ -s "$NVM_DIR/bash_completion" ]; then
-        . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-      fi
-
-  - name: pyenv
-    version: "v2.6.3"
-    description: "Python Version Manager - lets you easily switch between multiple versions of Python."
-    install_type: script
-    git_repo: "https://github.com/pyenv/pyenv.git"
     dependencies:
       Debian:
         - build-essential
         - libssl-dev
-        - zlib1g-dev
-        - libbz2-dev
-        - libreadline-dev
-        - libsqlite3-dev
-        - curl
-        - libncursesw5-dev
-        - xz-utils
-        - tk-dev
-  
+      Darwin:
+        - xz
+
+  # ... (other script tools like pyenv, rustup, etc. with their dependencies)

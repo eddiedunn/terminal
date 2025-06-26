@@ -27,8 +27,6 @@
   #     in your inventory to set your Git identity.
   # ----------------------------------------------------------------------
 
-  vars_files:
-    - "{{ playbook_dir }}/../roles/profile/defaults/main.yml"
 
   vars:
     # --- Override defaults here ---
@@ -56,12 +54,11 @@
     - name: "Pre-flight | Load tool definitions"
       ansible.builtin.include_vars:
         file: "{{ playbook_dir }}/../roles/tool_installer/defaults/main.yml"
-        name: tool_defs
 
     - name: "Pre-flight | Get definitions for required binary tools"
       ansible.builtin.set_fact:
-        required_tools: >-
-          {{ tool_defs.tool_installer_definitions
+        required_binary_tools: >-
+          {{ tool_installer_all_definitions
               | selectattr('name', 'in', profile_tools)
               | selectattr('install_type', 'eq', 'binary')
               | selectattr('binaries.' + ansible_system + '.' + ansible_architecture_normalized, 'defined')
@@ -69,8 +66,8 @@
 
     - name: "Pre-flight | Check artifact cache for required binaries"
       ansible.builtin.stat:
-        path: "{{ tool_defs.terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
-      loop: "{{ required_tools }}"
+        path: "{{ terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+      loop: "{{ required_binary_tools }}"
       delegate_to: localhost
       register: cache_check
 
@@ -94,7 +91,7 @@
 
         - name: "Cache | Re-verify cache after download attempt"
           ansible.builtin.stat:
-            path: "{{ tool_defs.terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+            path: "{{ terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
           loop: "{{ missing_binaries }}"
           delegate_to: localhost
           register: final_cache_check
@@ -102,7 +99,7 @@
         - name: "Cache | Fail if binaries are still missing"
           ansible.builtin.fail:
             msg: |
-              The following binaries are still missing from the artifact cache ({{ tool_defs.terminal_artifact_cache_dir }}):
+              The following binaries are still missing from the artifact cache ({{ terminal_artifact_cache_dir }}):
               {% for res in final_cache_check.results if not res.stat.exists %}
               - {{ res.item.name }} (v{{ res.item.version }})
               {% endfor %}

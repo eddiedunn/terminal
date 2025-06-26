@@ -13,6 +13,13 @@ A modular Ansible collection to configure a modern, cross-platform terminal envi
 
 ---
 
+## Requirements
+
+> **IMPORTANT:**
+> - You must have Python (3.8+) installed _before_ running any playbooks. Ansible itself requires Python, and so do all supporting scripts.
+> - All required Python dependencies (e.g., `pyyaml`, `requests`, and Ansible itself) must be installed in your environment before running any playbooks. The playbooks will **not** attempt to install Python or any Python dependencies for you.
+> - It is recommended to use a Python virtual environment in your project root (e.g., `.venv` in the repo root) and install dependencies with `pip install -r requirements.txt`.
+
 ## Quick Start (Local Setup)
 
 This playbook will configure the terminal for the current user on your local machine.
@@ -94,6 +101,24 @@ To customize your setup, edit `playbooks/local_setup.yml` (or your own playbook)
 ---
 
 ## For Developers & Contributors
+
+### Development Workflow
+
+This collection is part of the `gaia-infra-platform` monorepo and relies on the central Ansible configuration located at `ansible/ansible.cfg`. This file ensures that the local, in-development version of the collection is used instead of one that might be installed globally.
+
+**Therefore, all `ansible-playbook` commands must be run from the `ansible/` directory.**
+
+For example, to run the `local_setup.yml` playbook from the repository root, you would do the following:
+
+```bash
+# Navigate to the ansible root directory from the project root
+cd ansible
+
+# Run the playbook
+ansible-playbook collections/ansible_collections/eddiedunn/terminal/playbooks/local_setup.yml
+```
+
+This is the standard and required workflow for all development and testing within this project.
 
 - **Testing**: Each role includes a `molecule` scenario for independent testing.
   ```sh

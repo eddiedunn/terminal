@@ -1,6 +1,6 @@
 ---
 # tasks/main.yml for eddiedunn.terminal.env_chassis
-# This role creates the base directory structure required by all other roles.
+# This role creates the base directory structure and ensures init scripts are sourced.
 
 - name: "env_chassis | Ensure user's primary bin directory exists"
   ansible.builtin.file:
@@ -23,3 +23,39 @@
     - ".bash_completion.d"
     - ".zsh/completions"
     - ".config/fish/completions"
+
+- name: "env_chassis | Ensure shell_init.d is sourced by shell profiles"
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    create: true
+    mode: '0644'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for eddiedunn.terminal shell_init.d"
+    block: |
+      # Source all shell scripts in shell_init.d for the appropriate shell
+      if [ -d "$HOME/.config/shell_init.d" ]; then
+        for init_file in "$HOME"/.config/shell_init.d/*; do
+          if [ -r "$init_file" ]; then
+            case "${init_file##*.}" in
+              sh)
+                # Source .sh files in any POSIX-compliant shell
+                . "$init_file"
+                ;;
+              bash)
+                # Source .bash files only in Bash
+                [ -n "$BASH_VERSION" ] && . "$init_file"
+                ;;
+              zsh)
+                # Source .zsh files only in Zsh
+                [ -n "$ZSH_VERSION" ] && . "$init_file"
+                ;;
+            esac
+          fi
+        done
+        unset init_file
+      fi
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+    - "{{ ansible_env.HOME }}/.profile"
+  loop_control:
+    label: "{{ item }}"

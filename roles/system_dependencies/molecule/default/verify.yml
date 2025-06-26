@@ -1,0 +1,34 @@
+---
+- name: Verify system_dependencies role
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Gather installed apt packages
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert build-essential is installed
+      ansible.builtin.assert:
+        that:
+          - "'build-essential' in ansible_facts.packages"
+        fail_msg: "build-essential is not installed"
+        success_msg: "build-essential is installed"
+
+    - name: Assert libssl-dev is installed
+      ansible.builtin.assert:
+        that:
+          - "'libssl-dev' in ansible_facts.packages"
+        fail_msg: "libssl-dev is not installed"
+        success_msg: "libssl-dev is installed"
+
+    - name: Check idempotence (run role again)
+      ansible.builtin.include_role:
+        name: eddiedunn.terminal.system_dependencies
+      register: result_idempotence
+
+    - name: Assert idempotence (no changes)
+      ansible.builtin.assert:
+        that:
+          - result_idempotence.changed == false
+        fail_msg: "Role is not idempotent"
+        success_msg: "Role is idempotent"

@@ -12,11 +12,67 @@
   register: tool_bin_stat
   delegate_to: localhost
 
+- name: "Download and cache binary for {{ tool.name }} if not present"
+  when: not tool_bin_stat.stat.exists
+  delegate_to: localhost
+  block:
+    - name: "Create cache directory for {{ tool.name }}"
+      ansible.builtin.file:
+        path: "{{ tool_bin_src | dirname }}"
+        state: directory
+        mode: '0755'
+
+    - name: "Set download path for {{ tool.name }} archive"
+      ansible.builtin.set_fact:
+        tool_archive_path: "{{ (tool_bin_src | dirname) + '/' + (tool.binaries[ansible_system][ansible_architecture_normalized].url | basename) }}"
+
+    - name: "Download binary archive for {{ tool.name }}"
+      ansible.builtin.get_url:
+        url: "{{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}"
+        dest: "{{ tool_archive_path }}"
+        mode: '0644'
+
+    - name: "Unarchive binary for {{ tool.name }}"
+      ansible.builtin.command:
+        cmd: tar -xzf "{{ tool_archive_path }}" -C "{{ tool_bin_src | dirname }}"
+
+    - name: "Find the executable in the extracted files for {{ tool.name }}"
+      ansible.builtin.find:
+        paths: "{{ tool_bin_src | dirname }}"
+        patterns: "{{ tool.binaries[ansible_system][ansible_architecture_normalized].executable_in_archive }}"
+        recurse: true
+      register: found_executable
+
+    - name: "Fail if executable not found in archive for {{ tool.name }}"
+      ansible.builtin.fail:
+        msg: "Could not find '{{ tool.binaries[ansible_system][ansible_architecture_normalized].executable_in_archive }}' in the downloaded archive for {{ tool.name }} from {{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}"
+      when: found_executable.matched == 0
+
+    - name: "Fail if multiple executables found in archive for {{ tool.name }}"
+      ansible.builtin.fail:
+        msg: "Found multiple possible executables for {{ tool.name }} in {{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}. Don't know which one to use."
+      when: found_executable.matched > 1
+
+    - name: "Move extracted binary to final cache location for {{ tool.name }}"
+      ansible.builtin.copy:
+        src: "{{ found_executable.files[0].path }}"
+        dest: "{{ tool_bin_src }}"
+        remote_src: yes
+        mode: '0755'
+
+- name: "Ensure destination directory exists for {{ tool.name }}"
+  ansible.builtin.file:
+    path: "{{ tool_bin_dest_versioned | dirname }}"
+    state: directory
+    mode: '0755'
+
 - name: "Copy binary to user's bin directory for {{ tool.name }}"
   ansible.builtin.copy:
     src: "{{ tool_bin_src }}"
     dest: "{{ tool_bin_dest_versioned }}"
     mode: '0755'
+    force: true
+    remote_src: no
 
 - name: "Create/update main symlink to point to versioned binary"
   ansible.builtin.file:

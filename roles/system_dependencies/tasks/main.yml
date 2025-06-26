@@ -9,9 +9,9 @@
 - name: "Build list of required system packages"
   ansible.builtin.set_fact:
     apt_packages: >-
-      {{ apt_packages | default([]) + (item.dependencies.Debian | default([])) }}
+      {{ apt_packages | default([]) + (item.dependencies | default({})).get('Debian', []) }}
     brew_packages: >-
-      {{ brew_packages | default([]) + (item.dependencies.Darwin | default([])) }}
+      {{ brew_packages | default([]) + (item.dependencies | default({})).get('Darwin', []) }}
   loop: "{{ system_dependencies_all_definitions | selectattr('name', 'in', system_dependencies_tools) | list }}"
   loop_control:
     loop_var: item

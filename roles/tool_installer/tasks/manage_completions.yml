@@ -1,4 +1,13 @@
 ---
+- name: "Ensure all completion destination directories exist"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ completion_dirs_map.values() | unique }}"
+  loop_control:
+    label: "{{ item }}"
+
 - name: "Find staged completion files for {{ tool.name }} on controller"
   ansible.builtin.find:
     paths: "{{ role_path }}/files/completions/"

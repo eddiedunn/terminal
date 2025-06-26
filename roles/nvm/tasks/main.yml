@@ -1,4 +1,10 @@
 ---
+- name: "Ensure ~/.nvm directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.nvm"
+    state: directory
+    mode: '0755'
+
 - name: "Clone NVM repository"
   ansible.builtin.git:
     repo: "{{ nvm_git_repo }}"

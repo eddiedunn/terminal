@@ -2,6 +2,11 @@
 # tasks/main.yml for eddiedunn.terminal.profile
 # This meta-role orchestrates the other roles in the collection.
 
+- name: "DEBUG | Check the runtime value of profile_tools"
+  ansible.builtin.debug:
+    var: profile_tools
+  run_once: true
+
 - name: "1. Install system-level dependencies for tools"
   ansible.builtin.include_role:
     name: eddiedunn.terminal.system_dependencies
