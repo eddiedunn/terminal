@@ -42,3 +42,8 @@
   ansible.builtin.include_role:
     name: eddiedunn.terminal.rustup
   when: "'rustup' in profile_tools"
+
+- name: "7. Install Go environment if requested"
+  ansible.builtin.include_role:
+    name: eddiedunn.terminal.go
+  when: "'go' in profile_tools"

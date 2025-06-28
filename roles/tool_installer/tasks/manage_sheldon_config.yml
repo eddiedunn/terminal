@@ -1,0 +1,31 @@
+---
+# This task file manages the configuration for Sheldon
+
+- name: "Set Sheldon-specific paths"
+  ansible.builtin.set_fact:
+    sheldon_config_dir: "{{ ansible_user_dir }}/.config/sheldon"
+    sheldon_config_file: "{{ ansible_user_dir }}/.config/sheldon/plugins.toml"
+
+- name: "Sheldon | Ensure config directory exists"
+  ansible.builtin.file:
+    path: "{{ sheldon_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: "Set Sheldon-specific paths"
+  ansible.builtin.set_fact:
+    sheldon_config_dir: "{{ ansible_user_dir }}/.config/sheldon"
+    sheldon_config_file: "{{ ansible_user_dir }}/.config/sheldon/plugins.toml"
+
+- name: "Sheldon | Ensure config directory exists"
+  ansible.builtin.file:
+    path: "{{ sheldon_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: "Sheldon | Deploy plugins.toml configuration"
+  ansible.builtin.template:
+    src: sheldon/plugins.toml.j2
+    dest: "{{ sheldon_config_file }}"
+    mode: '0644'
+  notify: "Run sheldon lock"

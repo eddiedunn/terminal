@@ -10,3 +10,7 @@
 - name: "Manage init snippet for {{ tool.name }}"
   ansible.builtin.include_tasks: manage_init_snippet.yml
   when: tool.init_snippet is defined or tool.init_snippet_zsh is defined
+
+- name: "Manage Sheldon-specific configuration for {{ tool.name }}"
+  ansible.builtin.include_tasks: manage_sheldon_config.yml
+  when: tool.name == 'sheldon'

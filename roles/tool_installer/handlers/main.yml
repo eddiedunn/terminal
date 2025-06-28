@@ -1,0 +1,11 @@
+---
+# handlers file for eddiedunn.terminal.tool_installer
+
+- name: "Sheldon | Run 'sheldon lock' to generate/update plugins.lock"
+  listen: "Run sheldon lock"
+  ansible.builtin.command:
+    cmd: "{{ ansible_user_dir }}/.local/bin/sheldon lock"
+  register: sheldon_lock_result
+  changed_when: "'nothing to do' not in sheldon_lock_result.stderr"
+  failed_when: sheldon_lock_result.rc != 0 and 'nothing to do' not in sheldon_lock_result.stderr
+  become: false

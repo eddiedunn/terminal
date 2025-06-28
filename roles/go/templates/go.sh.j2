@@ -1,0 +1,17 @@
+# Ansible managed: {{ ansible_managed }}
+# Initialization for the Go environment
+
+export GOROOT="{{ go_root }}"
+export GOPATH="{{ go_path }}"
+export GOBIN="{{ go_bin }}"
+
+path_prepend() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="$1:$PATH"
+    fi
+}
+
+path_prepend "$GOBIN"
+path_prepend "$GOROOT/bin"
+
+unset -f path_prepend

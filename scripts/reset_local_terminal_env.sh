@@ -32,15 +32,15 @@ rm -f ~/.config/shell_init.d/10-nvm.sh
 rm -f ~/.config/shell_init.d/10-pyenv.sh
 rm -f ~/.config/shell_init.d/10-rustup.sh
 
-# Remove lines sourcing shell_init.d from shell configs
-sed -i.bak '/shell_init\.d/d' ~/.bashrc 2>/dev/null || true
-sed -i.bak '/shell_init\.d/d' ~/.zshrc 2>/dev/null || true
-sed -i.bak '/shell_init\.d/d' ~/.profile 2>/dev/null || true
+# FIX: Completely delete the shell configuration files for a true reset.
+for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+  echo "[reset] Deleting $shellrc if it exists..."
+  rm -f "$shellrc"
+  # Also remove any stray backups from previous sed runs
+  rm -f "${shellrc}.bak"
+done
 
 # Remove the artifact cache (hard-coded path)
 rm -rf /tmp/terminal-ansible-artifacts
-
-# Optionally remove backup files created by sed
-rm -f ~/.bashrc.bak ~/.zshrc.bak ~/.profile.bak
 
 echo "[reset_local_terminal_env.sh] Reset complete. Please restart your shell."

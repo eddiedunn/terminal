@@ -1,0 +1,13 @@
+---
+- name: Prepare
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "Run download helper script for tool_installer"
+      ansible.builtin.include_role:
+        name: "eddiedunn.terminal.tool_installer"
+        tasks_from: "download_binaries.yml"
+      vars:
+        # MOLECULE_PROJECT_DIRECTORY is the collection root
+        role_path: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/roles/tool_installer"

@@ -1,0 +1,27 @@
+# Ansible managed: {{ ansible_managed }}
+# This script configures the base PATH environment variable.
+# It is sourced first to ensure all subsequent tools have the correct path.
+
+# Helper function to prepend a path to the PATH variable if it's not already there.
+# This prevents duplicate entries.
+path_prepend() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="$1:$PATH"
+    fi
+}
+
+# Add user's local bin directory, which is the primary location for our installed tools.
+path_prepend "$HOME/.local/bin"
+
+# Add Homebrew paths for macOS. This is crucial for tools installed via Homebrew.
+{% if ansible_system == 'Darwin' %}
+# For Apple Silicon (aarch64/arm64)
+path_prepend "/opt/homebrew/bin"
+# For Intel Macs (x86_64) and Rosetta 2 on Apple Silicon
+path_prepend "/usr/local/bin"
+{% endif %}
+
+export PATH
+
+# Clean up the helper function so it doesn't pollute the shell environment.
+unset -f path_prepend

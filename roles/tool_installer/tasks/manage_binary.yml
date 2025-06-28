@@ -1,64 +1,41 @@
 ---
+# Assert that the required binary definition exists for this platform/arch
+- name: "Assert that a binary definition exists for this platform/arch for {{ tool.name }}"
+  ansible.builtin.assert:
+    that:
+      - tool.binaries is defined
+      - tool.binaries[ansible_system] is defined
+      - tool.binaries[ansible_system][ansible_architecture_normalized] is defined
+    fail_msg: "No binary definition found for {{ tool.name }} on {{ ansible_system }}/{{ ansible_architecture_normalized }}"
+
 - name: "Set platform-specific binary facts for {{ tool.name }}"
   ansible.builtin.set_fact:
     tool_bin_src: >-
-      {{ terminal_artifact_cache_dir | default('/tmp/terminal-ansible-artifacts') }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ tool.name }}/{{ tool.version }}/{{ tool.executable_name | default(tool.name) }}-{{ tool.version }}
-    tool_bin_dest_versioned: "{{ ansible_user_dir }}/.local/bin/{{ tool.executable_name | default(tool.name) }}-{{ tool.version }}"
-    tool_bin_dest_unversioned: "{{ ansible_user_dir }}/.local/bin/{{ tool.executable_name | default(tool.name) }}"
+      {{ [
+        tool_installer_artifact_cache_dir | default('/tmp/terminal-ansible-artifacts'),
+        ansible_system | lower,
+        ansible_architecture_normalized,
+        tool.name,
+        tool.version,
+        (tool.executable_name | default(tool.name)) ~ '-' ~ tool.version
+      ] | path_join }}
+    tool_bin_dest_versioned: >-
+      {{ [
+        ansible_user_dir,
+        '.local',
+        'bin',
+        (tool.executable_name | default(tool.name)) ~ '-' ~ tool.version
+      ] | path_join }}
+    tool_bin_dest_unversioned: >-
+      {{ [
+        ansible_user_dir,
+        '.local',
+        'bin',
+        tool.executable_name | default(tool.name)
+      ] | path_join }}
 
-- name: "Check if pre-downloaded binary exists"
-  ansible.builtin.stat:
-    path: "{{ tool_bin_src }}"
-  register: tool_bin_stat
-  delegate_to: localhost
 
-- name: "Download and cache binary for {{ tool.name }} if not present"
-  when: not tool_bin_stat.stat.exists
-  delegate_to: localhost
-  block:
-    - name: "Create cache directory for {{ tool.name }}"
-      ansible.builtin.file:
-        path: "{{ tool_bin_src | dirname }}"
-        state: directory
-        mode: '0755'
 
-    - name: "Set download path for {{ tool.name }} archive"
-      ansible.builtin.set_fact:
-        tool_archive_path: "{{ (tool_bin_src | dirname) + '/' + (tool.binaries[ansible_system][ansible_architecture_normalized].url | basename) }}"
-
-    - name: "Download binary archive for {{ tool.name }}"
-      ansible.builtin.get_url:
-        url: "{{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}"
-        dest: "{{ tool_archive_path }}"
-        mode: '0644'
-
-    - name: "Unarchive binary for {{ tool.name }}"
-      ansible.builtin.command:
-        cmd: tar -xzf "{{ tool_archive_path }}" -C "{{ tool_bin_src | dirname }}"
-
-    - name: "Find the executable in the extracted files for {{ tool.name }}"
-      ansible.builtin.find:
-        paths: "{{ tool_bin_src | dirname }}"
-        patterns: "{{ tool.binaries[ansible_system][ansible_architecture_normalized].executable_in_archive }}"
-        recurse: true
-      register: found_executable
-
-    - name: "Fail if executable not found in archive for {{ tool.name }}"
-      ansible.builtin.fail:
-        msg: "Could not find '{{ tool.binaries[ansible_system][ansible_architecture_normalized].executable_in_archive }}' in the downloaded archive for {{ tool.name }} from {{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}"
-      when: found_executable.matched == 0
-
-    - name: "Fail if multiple executables found in archive for {{ tool.name }}"
-      ansible.builtin.fail:
-        msg: "Found multiple possible executables for {{ tool.name }} in {{ tool.binaries[ansible_system][ansible_architecture_normalized].url }}. Don't know which one to use."
-      when: found_executable.matched > 1
-
-    - name: "Move extracted binary to final cache location for {{ tool.name }}"
-      ansible.builtin.copy:
-        src: "{{ found_executable.files[0].path }}"
-        dest: "{{ tool_bin_src }}"
-        remote_src: yes
-        mode: '0755'
 
 - name: "Ensure destination directory exists for {{ tool.name }}"
   ansible.builtin.file:
@@ -72,7 +49,7 @@
     dest: "{{ tool_bin_dest_versioned }}"
     mode: '0755'
     force: true
-    remote_src: no
+    remote_src: false
 
 - name: "Create/update main symlink to point to versioned binary"
   ansible.builtin.file:
@@ -81,10 +58,3 @@
     state: link
     force: true
 
-- name: "Create/update convenience symlink if defined (e.g. rg -> ripgrep)"
-  ansible.builtin.file:
-    src: "{{ tool_bin_dest_unversioned }}"
-    dest: "{{ ansible_user_dir }}/.local/bin/{{ tool.symlink_as }}"
-    state: link
-    force: true
-  when: tool.symlink_as is defined

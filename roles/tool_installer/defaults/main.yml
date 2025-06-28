@@ -4,14 +4,14 @@
 
 # This map defines the destination directories for shell completion files.
 # The paths are created and managed by the 'env_chassis' role.
-completion_dirs_map:
+tool_installer_completion_dirs_map:
   bash: ".bash_completion.d"
   zsh: ".zsh/completions"
   fish: ".config/fish/completions"
 
 # Path to the artifact cache on the controller.
 # Can be overridden by the TERMINAL_ANSIBLE_ARTIFACTS_DIR environment variable.
-terminal_artifact_cache_dir: "{{ lookup('env', 'TERMINAL_ANSIBLE_ARTIFACTS_DIR') | default('/tmp/terminal-ansible-artifacts', true) }}"
+tool_installer_artifact_cache_dir: "{{ lookup('env', 'TERMINAL_ANSIBLE_ARTIFACTS_DIR') | default('/tmp/terminal-ansible-artifacts', true) }}"
 
 # List of tools to install. Intended to be overridden by the calling 'profile' role.
 tool_installer_tools: []
@@ -23,15 +23,20 @@ tool_installer_shells:
   - fish
 
 # Canonical list of all supported tool definitions.
+# NOTE: For any tool that requires a shell hook (e.g. 'eval', 'source', 'export') to be functional, you MUST add an 'init_snippet' key to its definition. This enables the tool_installer role to generate the correct shell init scripts.
 tool_installer_all_definitions:
   - name: starship
-    version: "1.18.0"
+    version: "1.23.0"
     description: "The minimal, blazing-fast, and infinitely customizable prompt for any shell."
     install_type: binary
+    # Shell init snippet for prompt using STARSHIP_CONFIG env var (for v1.23.0 compatibility)
+    init_snippet: |
+      export STARSHIP_CONFIG="{{ ansible_user_dir }}/.config/starship.toml"
+      eval "$(starship init {shell_type_resolved})"
     binaries:
       Darwin:
         aarch64:
-          url: "https://github.com/starship/starship/releases/download/v1.18.0/starship-aarch64-apple-darwin.tar.gz"
+          url: "https://github.com/starship/starship/releases/download/v1.23.0/starship-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "starship"
     dependencies: {}
 
@@ -57,6 +62,8 @@ tool_installer_all_definitions:
   - name: sheldon
     version: "0.8.2"
     install_type: binary
+    # Shell init snippet for plugin manager
+    init_snippet: 'eval "$(sheldon source)"'
     binaries:
       Darwin:
         aarch64:
@@ -67,6 +74,17 @@ tool_installer_all_definitions:
   - name: fzf
     version: "0.62.0"
     install_type: binary
+    # Shell init snippets for fzf keybindings and completions
+    # Shell init snippets for fzf. Keybindings need to be sourced manually.
+    # Completions are picked up automatically by shells from their standard directories.
+    init_snippet: |
+      # Source fzf key bindings for Bash
+      [ -f "{{ ansible_user_dir }}/.bash_completion.d/fzf-key-bindings.bash" ] && source "{{ ansible_user_dir }}/.bash_completion.d/fzf-key-bindings.bash"
+    init_snippet_zsh: |
+      # Add fzf's completions to Zsh's fpath
+      fpath=("{{ ansible_user_dir }}/.zsh/completions" $fpath)
+      # Source fzf key bindings for Zsh
+      [ -f "{{ ansible_user_dir }}/.zsh/completions/fzf-key-bindings.zsh" ] && source "{{ ansible_user_dir }}/.zsh/completions/fzf-key-bindings.zsh"
     binaries:
       Darwin:
         aarch64:
@@ -101,6 +119,9 @@ tool_installer_all_definitions:
   - name: zoxide
     version: "0.9.8"
     install_type: binary
+    # Shell init snippets for zoxide
+    init_snippet: 'eval "$(zoxide init {shell_type_resolved} --cmd z)"'
+    init_snippet_zsh: 'eval "$(zoxide init zsh --cmd z)"'
     binaries:
       Darwin:
         aarch64:
@@ -111,6 +132,8 @@ tool_installer_all_definitions:
   - name: direnv
     version: "2.33.0"
     install_type: binary
+    # Shell init snippet for direnv
+    init_snippet: 'eval "$(direnv hook {shell_type_resolved})"'
     binaries:
       Darwin:
         aarch64:
@@ -127,6 +150,14 @@ tool_installer_all_definitions:
           url: "https://github.com/astral-sh/uv/releases/download/0.7.13/uv-aarch64-apple-darwin.tar.gz"
           executable_in_archive: "uv"
     dependencies: {}
+
+  - name: go
+    version: "1.22.5"
+    description: "The Go programming language."
+    install_type: script
+    dependencies:
+      Darwin:
+        - gnu-tar
 
   - name: nvm
     version: "v0.40.3"

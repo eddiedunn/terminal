@@ -1,0 +1,29 @@
+---
+- name: Verify
+  hosts: all
+  become: false
+  vars:
+    cargo_bin: "{{ ansible_user_dir }}/.cargo/bin/rustup"
+  tasks:
+    - name: "Verify rustup binary exists"
+      ansible.builtin.stat:
+        path: "{{ cargo_bin }}"
+      register: rustup_bin
+      failed_when: not rustup_bin.stat.exists
+
+    - name: "Verify rustup init script exists"
+      ansible.builtin.stat:
+        path: "{{ ansible_user_dir }}/.config/shell_init.d/10-rustup.sh"
+      register: rustup_init_script
+      failed_when: not rustup_init_script.stat.exists
+
+    - name: "Check idempotence"
+      ansible.builtin.include_role:
+        name: "eddiedunn.terminal.rustup"
+      register: second_run
+
+    - name: "Assert idempotence"
+      ansible.builtin.assert:
+        that: not second_run.changed
+        fail_msg: "Role is not idempotent"
+        success_msg: "Role is idempotent"

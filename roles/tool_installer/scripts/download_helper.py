@@ -47,7 +47,8 @@ class Downloader:
         # Use /tmp/terminal-ansible-artifacts as the artifact cache for binaries
         self.files_dir = Path(os.environ.get("TERMINAL_ANSIBLE_ARTIFACTS_DIR", "/tmp/terminal-ansible-artifacts"))
         self.defaults_file = self.role_path / "defaults" / "main.yml"
-        self.checksums_file = self.files_dir / "checksums.yml"
+        # FIX: Point to the checksums file inside the role, not the artifact cache.
+        self.checksums_file = self.role_path / "files" / "checksums.yml"
         self.temp_dir = Path(tempfile.gettempdir())
         self.known_checksums = {}
         self.changed = False
@@ -150,9 +151,15 @@ class Downloader:
         print(f"[DEBUG] Extracting/copying from {archive_path} to {final_path} (executable in archive: {executable_in_archive})")
         self._extract_and_copy(archive_path, executable_in_archive, final_path)
         print(f"[DEBUG] Extraction/copy complete: {final_path}")
-        # Do not delete the archive, leave it in place for completions extraction
-#         print(f"[DEBUG] Removing archive: {archive_path}")
-#         archive_path.unlink()
+        
+        # FIX: Stage the archive in the artifact cache for later use (e.g., completions)
+        # and then clean up the temporary downloaded file.
+        if archive_path.name.endswith(('.zip', '.tar.gz', '.tgz')):
+            final_archive_path = final_dir / archive_filename
+            print(f"[DEBUG] Staging archive {archive_path.name} to {final_archive_path}")
+            shutil.copy(archive_path, final_archive_path)
+
+        archive_path.unlink()
 
     def _determine_checksum(self, tool, details, archive_filename, url):
         """Finds the checksum for a binary using a prioritized strategy:
@@ -288,15 +295,19 @@ class Downloader:
         tool_name = tool_entry.get("name")
         if not version or not tool_name:
             return None
-        bin_path = self.files_dir / os_name / arch / tool_name / str(version) / f"{tool_name}-{version}"
+        # FIX: The executable name in the cache might not be the tool name
+        executable_name = tool_entry.get("executable_name", tool_name)
+        bin_path = self.files_dir / os_name / arch / tool_name / str(version) / f"{executable_name}-{version}"
         if bin_path.exists():
             return str(bin_path)
         return None
 
     def run_completions(self):
         """Process completions_metadata.yml and stage completions scripts."""
-        completions_meta_file = self.files_dir / "completions_metadata.yml"
-        completions_dir = self.files_dir / "completions"
+        # FIX: Look for completions metadata in the role's files dir.
+        completions_meta_file = self.role_path / "files" / "completions_metadata.yml"
+        # FIX: Stage generated completions into the role's files/completions dir.
+        completions_dir = self.role_path / "files" / "completions"
         if not completions_meta_file.exists():
             print("[COMPLETIONS] No completions_metadata.yml found, skipping completions staging.")
             return
@@ -323,14 +334,19 @@ class Downloader:
                         shell_dir = completions_dir / shell
                         shell_dir.mkdir(parents=True, exist_ok=True)
                         out_path = shell_dir / output
+                        # Find the tool definition to locate the staged binary
+                        tool_def = next((t for t in self.defaults.get("tool_installer_all_definitions", []) if t.get("name") == entry.get("name")), None)
+                        if not tool_def:
+                            print(f"[COMPLETIONS][ERROR] Could not find tool definition for {entry.get('name')}", file=sys.stderr)
+                            continue
                         print(f"[COMPLETIONS][CLI] Running '{cmd}' for {tool} ({shell}), writing to {out_path}")
                         try:
                             import subprocess
                             import os
-                            staged_bin = self._find_staged_binary(entry)
+                            staged_bin = self._find_staged_binary(tool_def)
                             env = os.environ.copy()
                             if staged_bin:
-                                env["PATH"] = f"{os.path.dirname(staged_bin)}:{env['PATH']}"
+                                env["PATH"] = f"{os.path.dirname(staged_bin)}{os.pathsep}{env['PATH']}"
                                 print(f"[COMPLETIONS][CLI] Using staged binary: {staged_bin}")
                             result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
                             with open(out_path, "wb") as outf:
@@ -359,7 +375,14 @@ class Downloader:
                             arch = "aarch64"
                         elif arch in ("x86_64", "amd64"):
                             arch = "x86_64"
-                        version = entry.get("version")
+
+                        # FIX: Look up the version from the canonical tool definitions
+                        tool_def = next((t for t in self.defaults.get("tool_installer_all_definitions", []) if t.get("name") == entry.get("name")), None)
+                        if not tool_def:
+                            print(f"[COMPLETIONS][ARCHIVE][ERROR] Tool definition not found for {entry.get('name')}", file=sys.stderr)
+                            continue
+
+                        version = tool_def.get("version")
                         tool_name = entry.get("name")
                         tool_dir = self.files_dir / os_name / arch / tool_name / str(version)
                         if not tool_dir.exists():
@@ -409,7 +432,8 @@ class Downloader:
     def _write_checksums(self):
         """Writes the updated checksum cache to disk if changes were made."""
         if self.changed:
-            print("\nUpdating checksums cache file: files/checksums.yml")
+            # FIX: Point to the checksums file inside the role, not the artifact cache.
+            print(f"\nUpdating checksums cache file: {self.checksums_file}")
             with open(self.checksums_file, "w", encoding="utf-8") as f:
                 yaml.dump(self.known_checksums, f, indent=2, sort_keys=True)
 

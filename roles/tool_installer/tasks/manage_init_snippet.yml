@@ -4,11 +4,24 @@
     shell_init_dir: "{{ ansible_user_dir }}/.config/shell_init.d"
 
 
+- name: "Set init script name for {{ tool.name }} to control source order"
+  ansible.builtin.set_fact:
+    # fzf keybindings must be sourced *after* plugin managers like Sheldon.
+    # We give it a high number (98) to ensure it runs last. Other tools get 50.
+    init_script_name: >-
+      {{ '98' if tool.name == 'fzf' else '50' }}_{{ tool.name }}
+
+- name: "Deploy starship.toml configuration from template if tool is starship"
+  ansible.builtin.template:
+    src: starship.toml.j2
+    dest: "{{ ansible_user_dir }}/.config/starship.toml"
+    mode: '0644'
+  when: tool.name == 'starship'
 
 - name: "Deploy shell init snippets for {{ tool.name }}"
   ansible.builtin.template:
     src: tool_init.sh.j2
-    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - (loop.index | default(99)) }}_{{ tool.name }}.bash"
+    dest: "{{ shell_init_dir }}/{{ init_script_name }}.bash"
     mode: '0644'
   vars:
     current_init_snippet: "{{ tool.init_snippet | replace('{shell_type_resolved}', 'bash') }}"
@@ -17,8 +30,8 @@
 - name: "Deploy Zsh init snippet for {{ tool.name }}"
   ansible.builtin.template:
     src: tool_init.sh.j2
-    dest: "{{ ansible_user_dir }}/.config/shell_init.d/{{ 99 - (loop.index | default(99)) }}_{{ tool.name }}.zsh"
+    dest: "{{ shell_init_dir }}/{{ init_script_name }}.zsh"
     mode: '0644'
   vars:
-    current_init_snippet: "{{ (tool.init_snippet_zsh | default(tool.init_snippet)) | replace('{shell_type_resolved}', 'zsh') }}"
-  when: "'zsh' in tool_installer_shells"
+    current_init_snippet: "{{ (tool.init_snippet_zsh | default(tool.init_snippet) | default('')) | replace('{shell_type_resolved}', 'zsh') }}"
+  when: "'zsh' in tool_installer_shells and (tool.init_snippet_zsh is defined or tool.init_snippet is defined)"

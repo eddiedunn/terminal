@@ -1,6 +1,6 @@
 # Makefile for eddiedunn.terminal collection development
 
-.PHONY: all reset clean build install reinstall verify
+.PHONY: all reset clean build install reinstall verify fulltest
 
 all: reinstall verify
 
@@ -35,3 +35,17 @@ verify:
 reset_shell:
 	@echo "[Makefile] Resetting shell environment..."
 	./scripts/reset_local_terminal_env.sh
+
+fulltest:
+	@echo "[Makefile] Running full local test: reinstall, playbook, verify..."
+	$(MAKE) reinstall
+	ansible-playbook playbooks/local_setup.yml
+	$(MAKE) verify
+
+molecule-all:
+	@echo "[Makefile] Running Molecule tests for all roles (env_chassis, nvm, pyenv, rustup, profile)..."
+	./scripts/molecule_all.sh
+
+lint:
+	@echo "[Makefile] Linting collection..."
+	./scripts/lint_all.sh

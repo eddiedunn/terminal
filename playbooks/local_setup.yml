@@ -5,10 +5,10 @@
   gather_facts: false
   tasks:
     - name: Print current working directory
-      debug:
-        msg: "CWD is {{ lookup('env','PWD') }}"
+      ansible.builtin.debug:
+        msg: "CWD is {{ lookup('env', 'PWD') }}"
     - name: Print role path (if in role context)
-      debug:
+      ansible.builtin.debug:
         msg: "Role path is {{ role_path | default('not in role context') }}"
 
 - name: Setup Local Developer Terminal Environment
@@ -43,6 +43,7 @@
       - pyenv
       - uv
       - rustup
+      - go
 
     # IMPORTANT: Override these with your personal details!
 
@@ -66,7 +67,15 @@
 
     - name: "Pre-flight | Check artifact cache for required binaries"
       ansible.builtin.stat:
-        path: "{{ terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+        path: >-
+          {{ [
+            tool_installer_artifact_cache_dir,
+            ansible_system | lower,
+            ansible_architecture_normalized,
+            item.name,
+            item.version,
+            (item.executable_name | default(item.name)) ~ '-' ~ item.version
+          ] | path_join }}
       loop: "{{ required_binary_tools }}"
       delegate_to: localhost
       register: cache_check
@@ -86,12 +95,18 @@
           ansible.builtin.include_role:
             name: "eddiedunn.terminal.tool_installer"
             tasks_from: "download_binaries.yml"
-          vars:
-            role_path: "{{ playbook_dir }}/../roles/tool_installer"
 
         - name: "Cache | Re-verify cache after download attempt"
           ansible.builtin.stat:
-            path: "{{ terminal_artifact_cache_dir }}/{{ ansible_system | lower }}/{{ ansible_architecture_normalized }}/{{ item.name }}/{{ item.version }}/{{ (item.executable_name | default(item.name)) }}-{{ item.version }}"
+            path: >-
+              {{ [
+                tool_installer_artifact_cache_dir,
+                ansible_system | lower,
+                ansible_architecture_normalized,
+                item.name,
+                item.version,
+                (item.executable_name | default(item.name)) ~ '-' ~ item.version
+              ] | path_join }}
           loop: "{{ missing_binaries }}"
           delegate_to: localhost
           register: final_cache_check
@@ -99,7 +114,7 @@
         - name: "Cache | Fail if binaries are still missing"
           ansible.builtin.fail:
             msg: |
-              The following binaries are still missing from the artifact cache ({{ terminal_artifact_cache_dir }}):
+              The following binaries are still missing from the artifact cache ({{ tool_installer_artifact_cache_dir }}):
               {% for res in final_cache_check.results if not res.stat.exists %}
               - {{ res.item.name }} (v{{ res.item.version }})
               {% endfor %}

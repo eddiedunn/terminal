@@ -2,19 +2,26 @@
 # tasks/main.yml for eddiedunn.terminal.env_chassis
 # This role creates the base directory structure and ensures init scripts are sourced.
 
-- name: "env_chassis | Ensure user's primary bin directory exists"
+
+- name: "Env_chassis | Ensure user's primary bin directory exists"
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.local/bin"
     state: directory
     mode: '0755'
 
-- name: "env_chassis | Ensure shell initialization directory exists"
+- name: "Env_chassis | Ensure shell initialization directory exists"
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/.config/shell_init.d"
     state: directory
     mode: '0755'
 
-- name: "env_chassis | Ensure shell completion directories exist"
+- name: "Env_chassis | Deploy base PATH management script"
+  ansible.builtin.template:
+    src: 00_path.sh.j2
+    dest: "{{ ansible_user_dir }}/.config/shell_init.d/00_path.sh"
+    mode: '0755'
+
+- name: "Env_chassis | Ensure shell completion directories exist"
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/{{ item }}"
     state: directory
@@ -24,10 +31,11 @@
     - ".zsh/completions"
     - ".config/fish/completions"
 
-- name: "env_chassis | Ensure shell_init.d is sourced by shell profiles"
+- name: "Env_chassis | Ensure shell_init.d is sourced by shell profiles"
   ansible.builtin.blockinfile:
     path: "{{ item }}"
     create: true
+
     mode: '0644'
     marker: "# {mark} ANSIBLE MANAGED BLOCK for eddiedunn.terminal shell_init.d"
     block: |
@@ -37,6 +45,7 @@
           if [ -r "$init_file" ]; then
             case "${init_file##*.}" in
               sh)
+
                 # Source .sh files in any POSIX-compliant shell
                 . "$init_file"
                 ;;
@@ -58,4 +67,6 @@
     - "{{ ansible_env.HOME }}/.zshrc"
     - "{{ ansible_env.HOME }}/.profile"
   loop_control:
+
+
     label: "{{ item }}"
