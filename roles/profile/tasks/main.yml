@@ -47,3 +47,8 @@
   ansible.builtin.include_role:
     name: eddiedunn.terminal.go
   when: "'go' in profile_tools"
+
+- name: "8. Install SDKMAN if requested"
+  ansible.builtin.include_role:
+    name: eddiedunn.terminal.sdkman
+  when: "'sdkman' in profile_tools"

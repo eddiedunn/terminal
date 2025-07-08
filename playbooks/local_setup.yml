@@ -30,6 +30,13 @@
 
   vars:
     # --- Override defaults here ---
+    # Environment variables to be set in the shell
+    environment_vars:
+      LDFLAGS: "-L/opt/homebrew/opt/libpq/lib"
+      CPPFLAGS: "-I/opt/homebrew/opt/libpq/include"
+      PKG_CONFIG_PATH: "/opt/homebrew/opt/libpq/lib/pkgconfig"
+
+    # List of tools to install and configure
     profile_tools:
       - starship
       - sheldon
@@ -44,6 +51,7 @@
       - uv
       - rustup
       - go
+      - sdkman
 
     # IMPORTANT: Override these with your personal details!
 

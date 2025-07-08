@@ -171,4 +171,10 @@ tool_installer_all_definitions:
       Darwin:
         - xz
 
+  - name: sdkman
+    version: "5.18.2"
+    description: "SDKMAN! The Software Development Kit Manager."
+    install_type: script
+    dependencies: {}
+
   # ... (other script tools like pyenv, rustup, etc. with their dependencies)

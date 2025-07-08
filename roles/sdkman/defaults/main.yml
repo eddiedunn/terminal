@@ -1,0 +1,10 @@
+---
+# defaults file for eddiedunn.terminal.sdkman
+# SDKMAN! version to self-update to after installation. Set to "latest" to skip the self-update step.
+sdkman_version: "5.18.2"
+
+# Installation directory for SDKMAN!
+sdkman_install_dir: "{{ ansible_user_dir }}/.sdkman"
+
+# Remote install script URL (official channel)
+sdkman_install_script_url: "https://get.sdkman.io"

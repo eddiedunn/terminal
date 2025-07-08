@@ -1,0 +1,14 @@
+# Ansible managed: {{ ansible_managed }}
+# This script sets up environment variables for the terminal environment.
+# It is sourced after the base PATH configuration.
+
+# PostgreSQL development flags (Homebrew on macOS)
+{% if ansible_system == 'Darwin' %}
+export LDFLAGS="-L/opt/homebrew/opt/libpq/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libpq/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/libpq/lib/pkgconfig"
+{% endif %}
+
+# Add additional environment variables below this line
+# Example:
+# export CUSTOM_VAR="value"

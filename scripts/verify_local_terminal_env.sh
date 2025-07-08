@@ -29,6 +29,13 @@ check_bin() {
     echo "[OK] On PATH: $1"
   elif [ -x "$HOME/.local/bin/$1" ]; then
     echo "[OK] $1 found in ~/.local/bin (not on PATH)"
+  elif [ "$1" = "sdk" ]; then
+    if bash -c "source \"$HOME/.config/shell_init.d/10-sdkman.sh\" >/dev/null 2>&1 && type -t sdk >/dev/null 2>&1"; then
+      echo "[OK] sdk function available after sourcing init script"
+    else
+      echo "[FAIL] sdk function not found even after sourcing init script"
+      failures=$((failures+1))
+    fi
   else
     echo "[FAIL] Not found: $1 (not on PATH or in ~/.local/bin)"
     failures=$((failures+1))
@@ -43,19 +50,20 @@ check_dir "$HOME/.zsh/completions"
 check_dir "$HOME/.config/fish/completions"
 
 # Check tool-specific directories for version managers
-for d in "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.cargo"; do
+for d in "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.cargo" "$HOME/.sdkman"; do
   check_dir "$d"
 done
 
 # Check important shell init snippets
 for f in "$HOME/.config/shell_init.d/10-nvm.sh" \
          "$HOME/.config/shell_init.d/10-pyenv.sh" \
-         "$HOME/.config/shell_init.d/10-rustup.sh"; do
+         "$HOME/.config/shell_init.d/10-rustup.sh" \
+         "$HOME/.config/shell_init.d/10-sdkman.sh"; do
   check_exists "$f"
 done
 
 # Check for all installed binaries
-for bin in starship sheldon fzf bat eza ripgrep zoxide direnv uv; do
+for bin in starship sheldon fzf bat eza ripgrep zoxide direnv uv sdk; do
   check_bin "$bin"
 done
 

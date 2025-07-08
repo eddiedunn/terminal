@@ -21,6 +21,12 @@
     dest: "{{ ansible_user_dir }}/.config/shell_init.d/00_path.sh"
     mode: '0755'
 
+- name: "Env_chassis | Deploy environment variables script"
+  ansible.builtin.template:
+    src: 10_environment.sh.j2
+    dest: "{{ ansible_user_dir }}/.config/shell_init.d/10_environment.sh"
+    mode: '0755'
+
 - name: "Env_chassis | Ensure shell completion directories exist"
   ansible.builtin.file:
     path: "{{ ansible_user_dir }}/{{ item }}"
