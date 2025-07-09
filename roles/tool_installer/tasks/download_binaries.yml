@@ -7,6 +7,7 @@
     path: "{{ role_path }}/scripts"
     state: directory
     mode: '0755'
+  become: true
   delegate_to: localhost
   run_once: true
 - name: Execute binary download and verification script
@@ -14,6 +15,7 @@
     cmd: "python3 {{ role_path }}/scripts/download_helper.py {{ role_path }}"
   register: script_result
   changed_when: "'CHANGED' in script_result.stdout"
+  become: true
   delegate_to: localhost
   run_once: true
   args:

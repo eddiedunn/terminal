@@ -11,6 +11,7 @@
     dest: "{{ ansible_user_dir }}/.nvm"
     version: "{{ nvm_version }}"
     force: false
+    recursive: false
 
 - name: "Deploy NVM init script"
   ansible.builtin.template:
