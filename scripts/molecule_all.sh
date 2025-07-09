@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
 # Use the Colima Docker socket if available
 export DOCKER_HOST=${DOCKER_HOST:-"unix://$HOME/.colima/docker.sock"}
 
