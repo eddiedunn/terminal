@@ -7,7 +7,7 @@ Removes all files, directories, binaries, and configuration changes created by t
 
 - Removes:
   - `~/.local/bin`, `~/.config/shell_init.d`, completions directories
-  - Tool-specific directories (e.g., `~/.nvm`, `~/.pyenv`, `~/.cargo`, etc.)
+  - Tool-specific directories (e.g., `~/.nvm`, `~/.pyenv`, `~/.cargo`, `~/.sdkman`, Go directories)
   - Shell init snippets for tools
   - Sourcing lines from `.bashrc`, `.zshrc`, `.profile`
   - The artifact cache at `/tmp/terminal-ansible-artifacts`
@@ -16,10 +16,11 @@ Removes all files, directories, binaries, and configuration changes created by t
 Checks for the presence of key files, directories, binaries, and shell config changes expected after running the local setup playbook. Use this to confirm the playbook worked as intended.
 
 - Checks:
-  - Core and tool-specific directories
-  - Shell init snippets
+  - Core and tool-specific directories, including SDKMAN and Go
+  - Shell init snippets for all tools
   - Binaries on PATH
   - Artifact cache presence
+  - Configuration files like `starship.toml` and `sheldon/plugins.toml`
   - Sourcing of shell_init.d in shell configs
 
 ---

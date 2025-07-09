@@ -46,21 +46,40 @@ check_dir "$HOME_DIR/.bash_completion.d"
 check_dir "$HOME_DIR/.zsh/completions"
 check_dir "$HOME_DIR/.config/fish/completions"
 
-# Check tool-specific directories for version managers
-for d in "$HOME_DIR/.nvm" "$HOME_DIR/.pyenv" "$HOME_DIR/.cargo"; do
+# Check tool-specific directories for version managers and language runtimes
+for d in \
+  "$HOME_DIR/.nvm" \
+  "$HOME_DIR/.pyenv" \
+  "$HOME_DIR/.cargo" \
+  "$HOME_DIR/.sdkman" \
+  "$HOME_DIR/.local/go" \
+  "$HOME_DIR/go" \
+  "$HOME_DIR/go/bin"; do
   check_dir "$d"
 done
 
 # Check important shell init snippets
-for f in "$HOME_DIR/.config/shell_init.d/10-nvm.sh" \
-         "$HOME_DIR/.config/shell_init.d/10-pyenv.sh" \
-         "$HOME_DIR/.config/shell_init.d/10-rustup.sh"; do
+for f in \
+  "$HOME_DIR/.config/shell_init.d/00_path.sh" \
+  "$HOME_DIR/.config/shell_init.d/10_environment.sh" \
+  "$HOME_DIR/.config/shell_init.d/10-nvm.sh" \
+  "$HOME_DIR/.config/shell_init.d/10-pyenv.sh" \
+  "$HOME_DIR/.config/shell_init.d/10-rustup.sh" \
+  "$HOME_DIR/.config/shell_init.d/10-sdkman.sh" \
+  "$HOME_DIR/.config/shell_init.d/20_go.sh"; do
   check_exists "$f"
 done
 
 # Check for all installed binaries
-for bin in starship sheldon fzf bat eza ripgrep zoxide direnv uv; do
+for bin in starship sheldon fzf bat eza ripgrep zoxide direnv uv go; do
   check_bin "$bin"
+done
+
+# Check additional configuration files
+for f in \
+  "$HOME_DIR/.config/starship.toml" \
+  "$HOME_DIR/.config/sheldon/plugins.toml"; do
+  check_exists "$f"
 done
 
 # Check artifact cache
