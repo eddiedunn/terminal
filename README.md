@@ -57,6 +57,7 @@ This collection is designed with a clear separation of concerns:
 
 3.  **Core Engines (`tool_installer`, `nvm`, etc.)**:
     - `tool_installer`: Copies pre-staged binaries and completions from the controller's cache to the target machine. It also deploys shell initialization snippets.
+    - `env_chassis`: Prepares user directories, dotfiles, and configures the shell to source initialization snippets.
     - `system_dependencies`: Installs system-level packages (e.g., `build-essential`) required by other roles.
     - `nvm`, `pyenv`, `rustup`: Handle tools that require script-based git checkouts and have their own initialization logic.
 
@@ -141,42 +142,6 @@ This is the standard and required workflow for all development and testing withi
 The official `eza` project does not currently distribute pre-built binaries for Darwin (macOS). To provide a seamless out-of-the-box experience, this collection uses a public fork ([eddiedunn/eza](https://github.com/eddiedunn/eza)) that builds and releases these binaries. The source and build process are fully transparent. Should the official project begin publishing Darwin binaries, this collection will be updated to use them.
 
 
-## Quickstart
-
-1. **Clone the repo**
-2. **Create and activate the Python virtual environment**
-   ```sh
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
-3. **Run the local setup playbook**
-   ```sh
-   ansible-playbook playbooks/local_setup.yml
-   ```
-
-## Architecture Overview
-
-- **tool_installer**: The engine. Installs tools, manages binaries, and drops shell init scripts.
-- ****: The chassis. Prepares user directories, dotfiles, and configures the shell to source init scripts.
-- **profile**: The blueprint. Orchestrates the other roles and defines the user-facing entry point.
-
-## Documentation
-- See `docs/BINARY_MANAGEMENT.md` for binary caching and reproducibility.
-- See `docs/COMPLETIONS_WORKFLOW.md` for shell completions and FZF integration.
-
-## Customization
-- Edit `playbooks/local_setup.yml` to add/remove tools or configure shells, aliases, and environment variables.
-- Override variables in your inventory or on the command line as needed.
-
-## Testing
-- Each role includes a `molecule` scenario for independent testing:
-  ```sh
-  cd roles/tool_installer && molecule test
-  cd roles/ && molecule test
-  ```
-
----
 
 For advanced usage and details, see the `docs/` directory and each role's README.md.
 
@@ -194,7 +159,7 @@ This is required for all development, testing, and CI. If you skip this step, co
 ---
 
 ## Project Structure
-- Modular Ansible roles: ``, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
+- Modular Ansible roles: `env_chassis`, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
 - Collection metadata: `galaxy.yml`, `.gitignore`
 
 ---
@@ -212,15 +177,6 @@ The official `eza-community/eza` project does **not** distribute pre-built Darwi
 
 For details on how binaries and completions are managed, see `BINARY_MANAGEMENT.md`, `COMPLETIONS_WORKFLOW.md`, and the helper automation scripts included in the repository.
 
-## Quickstart
-1. Clone the repo
-2. Create and activate the virtual environment (if not already present):
-   ```sh
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-
----
 
 ## Using This Collection in Your Ansible Project
 

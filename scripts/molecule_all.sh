@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Environment variables:
-#   COLIMA_SOCKET - Optional path to a custom Docker socket. If set, DOCKER_HOST
-#     will be configured to use this socket.
 
-if [ -n "${COLIMA_SOCKET:-}" ]; then
-  export DOCKER_HOST="unix://$COLIMA_SOCKET"
-fi
+# Use the Colima Docker socket if available
+export DOCKER_HOST=${DOCKER_HOST:-"unix://$HOME/.colima/docker.sock"}
 
 # Activate the Python venv for ansible/molecule
 source "$(dirname "$0")/../../.venv/bin/activate"
