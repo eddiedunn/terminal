@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Always use Colima docker socket for tmwsiy
-export DOCKER_HOST=unix:///Users/tmwsiy/.colima/docker.sock
+# Use the Colima Docker socket if available
+export DOCKER_HOST=${DOCKER_HOST:-"unix://$HOME/.colima/docker.sock"}
 
 # Activate the Python venv for ansible/molecule
 source "$(dirname "$0")/../../.venv/bin/activate"
