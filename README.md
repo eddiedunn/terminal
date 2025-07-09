@@ -294,7 +294,7 @@ Replace `<your_namespace>` with the actual namespace (e.g., `eddiedunn`).
 
 ## Reference: Source Role
 - Role name: `terminal_setup`
-- Path: `/Users/tmwsiy/code/gaia-infra-platform/ansible/roles/terminal_setup`
+- Path: `<path_to_repo>/ansible/roles/terminal_setup`
 
 ---
 
