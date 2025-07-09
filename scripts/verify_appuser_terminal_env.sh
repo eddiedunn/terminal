@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This script verifies that the eddiedunn.terminal local setup playbook has completed its intended operations.
-# It checks for key directories, files, binaries, and shell config changes.
+# Verify the terminal setup for the dedicated appuser account. This mirrors
+# verify_local_terminal_env.sh but targets the appuser home directory.
+
+TARGET_USER="appuser"
+HOME_DIR="$(eval echo ~${TARGET_USER})"
+USER_CMD=(sudo -Hiu "${TARGET_USER}" --)
 
 failures=0
 
@@ -25,9 +29,9 @@ check_dir() {
 }
 
 check_bin() {
-  if command -v "$1" >/dev/null 2>&1; then
+  if "${USER_CMD[@]}" command -v "$1" >/dev/null 2>&1; then
     echo "[OK] On PATH: $1"
-  elif [ -x "$HOME/.local/bin/$1" ]; then
+  elif [ -x "$HOME_DIR/.local/bin/$1" ]; then
     echo "[OK] $1 found in ~/.local/bin (not on PATH)"
   else
     echo "[FAIL] Not found: $1 (not on PATH or in ~/.local/bin)"
@@ -36,21 +40,21 @@ check_bin() {
 }
 
 # Check core directories
-check_dir "$HOME/.local/bin"
-check_dir "$HOME/.config/shell_init.d"
-check_dir "$HOME/.bash_completion.d"
-check_dir "$HOME/.zsh/completions"
-check_dir "$HOME/.config/fish/completions"
+check_dir "$HOME_DIR/.local/bin"
+check_dir "$HOME_DIR/.config/shell_init.d"
+check_dir "$HOME_DIR/.bash_completion.d"
+check_dir "$HOME_DIR/.zsh/completions"
+check_dir "$HOME_DIR/.config/fish/completions"
 
 # Check tool-specific directories for version managers
-for d in "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.cargo"; do
+for d in "$HOME_DIR/.nvm" "$HOME_DIR/.pyenv" "$HOME_DIR/.cargo"; do
   check_dir "$d"
 done
 
 # Check important shell init snippets
-for f in "$HOME/.config/shell_init.d/10-nvm.sh" \
-         "$HOME/.config/shell_init.d/10-pyenv.sh" \
-         "$HOME/.config/shell_init.d/10-rustup.sh"; do
+for f in "$HOME_DIR/.config/shell_init.d/10-nvm.sh" \
+         "$HOME_DIR/.config/shell_init.d/10-pyenv.sh" \
+         "$HOME_DIR/.config/shell_init.d/10-rustup.sh"; do
   check_exists "$f"
 done
 
@@ -68,7 +72,7 @@ else
 fi
 
 # Check for shell sourcing
-for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+for shellrc in "$HOME_DIR/.bashrc" "$HOME_DIR/.zshrc" "$HOME_DIR/.profile"; do
   if grep -q 'shell_init.d' "$shellrc" 2>/dev/null; then
     echo "[OK] $shellrc sources shell_init.d"
   else
@@ -78,9 +82,9 @@ for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
 done
 
 if [ "$failures" -eq 0 ]; then
-  echo "[verify_local_terminal_env.sh] All checks passed."
+  echo "[verify_appuser_terminal_env.sh] All checks passed."
   exit 0
 else
-  echo "[verify_local_terminal_env.sh] $failures check(s) failed."
+  echo "[verify_appuser_terminal_env.sh] $failures check(s) failed."
   exit 1
 fi
