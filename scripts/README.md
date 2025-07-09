@@ -32,4 +32,12 @@ Checks for the presence of key files, directories, binaries, and shell config ch
 ./verify_local_terminal_env.sh
 ```
 
+## reset_appuser_terminal_env.sh
+Performs the same cleanup as `reset_local_terminal_env.sh` but targets the
+`appuser` account. Useful when the playbook was executed as that user.
+
+## verify_appuser_terminal_env.sh
+Runs the verification checks against the `appuser` environment instead of the
+current user.
+
 *For development use only. These scripts are destructive and not intended for production systems.*
