@@ -1,0 +1,39 @@
+---
+# Basic terminal tools installed via Homebrew
+# These tools provide completions and updates automatically through Homebrew
+
+basic_tools_list:
+  # Core productivity tools
+  - fzf                    # Fuzzy finder
+  - bat                    # Better cat with syntax highlighting
+  - eza                    # Better ls with colors and icons
+  - zoxide                 # Smart cd replacement
+  - direnv                 # Environment variable management
+  - uv                     # Fast Python package installer
+  - ripgrep                # Fast grep replacement
+  
+  # Shell enhancement
+  - starship               # Modern shell prompt
+  - sheldon                # Plugin manager for zsh
+  
+  # Development tools
+  - kubectl                # Kubernetes CLI
+  - gh                     # GitHub CLI
+  - jenkins-cli            # Jenkins CLI
+  - google-cloud-sdk       # Google Cloud CLI (gcloud)
+
+# Homebrew package mapping (tool name -> homebrew formula)
+basic_tools_homebrew_mapping:
+  fzf: fzf
+  bat: bat
+  eza: eza
+  zoxide: zoxide
+  direnv: direnv
+  uv: uv
+  ripgrep: ripgrep
+  starship: starship
+  sheldon: sheldon
+  kubectl: kubectl
+  gh: gh
+  jenkins-cli: jenkins-cli
+  google-cloud-sdk: google-cloud-sdk

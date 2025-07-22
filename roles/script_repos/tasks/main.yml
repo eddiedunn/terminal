@@ -1,0 +1,77 @@
+---
+- name: "Script Repos | Display repositories to be managed"
+  ansible.builtin.debug:
+    msg: |
+      Managing script repositories:
+      {% for repo in script_repositories %}
+      - {{ repo.name }}: {{ repo.repo }} ({{ repo.version }})
+        Scripts from: {{ repo.path_in_repo }}
+      {% endfor %}
+  when: script_repositories | length > 0
+
+- name: "Script Repos | Skip if no repositories configured"
+  ansible.builtin.debug:
+    msg: "No script repositories configured. Skipping script repository management."
+  when: script_repositories | length == 0
+
+- name: "Script Repos | Ensure directories exist"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ script_repos_base_dir }}"
+    - "{{ script_repos_bin_dir }}"
+  when: script_repositories | length > 0
+
+- name: "Script Repos | Clone or update repositories"
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest | default(script_repos_base_dir + '/' + item.name) }}"
+    version: "{{ item.version | default('main') }}"
+    force: true
+  loop: "{{ script_repositories }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: script_repositories | length > 0
+
+- name: "Script Repos | Find executable scripts in repositories"
+  ansible.builtin.find:
+    paths: "{{ item.dest | default(script_repos_base_dir + '/' + item.name) }}/{{ item.path_in_repo | default('') }}"
+    file_type: file
+    use_regex: false
+    patterns: "*"
+  register: script_files
+  loop: "{{ script_repositories }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: script_repositories | length > 0
+
+- name: "Script Repos | Create symlinks for scripts"
+  ansible.builtin.file:
+    src: "{{ item.1.path }}"
+    dest: "{{ script_repos_bin_dir }}/{{ item.1.path | basename }}"
+    state: link
+    force: true
+  loop: "{{ script_files.results | subelements('files') }}"
+  loop_control:
+    label: "{{ item.1.path | basename }}"
+  when: 
+    - script_repositories | length > 0
+    - script_files is defined
+    - item.1.mode is match('.*x.*')  # Only link executable files
+
+- name: "Script Repos | Display linked scripts summary"
+  ansible.builtin.debug:
+    msg: |
+      Script repositories configured successfully:
+      {% for result in script_files.results %}
+      {% if result.files | length > 0 %}
+      - {{ result.item.name }}: {{ result.files | selectattr('mode', 'match', '.*x.*') | list | length }} executable scripts linked
+      {% endif %}
+      {% endfor %}
+      
+      Scripts are available in: {{ script_repos_bin_dir }}
+  when: 
+    - script_repositories | length > 0
+    - script_files is defined

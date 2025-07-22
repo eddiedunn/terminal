@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: terminal_profile
+  author: O'Reilly Auto
+  description: Orchestrator role that combines terminal setup components based on profiles
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - terminal
+    - orchestrator
+    - profile
+    - development
+    - environment
+
+dependencies: []

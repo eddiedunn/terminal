@@ -1,0 +1,67 @@
+# {{ ansible_managed }}
+# Terminal tools initialization for zsh
+
+# PATH additions
+{% for path in shell_path_additions %}
+export PATH="{{ path }}:$PATH"
+{% endfor %}
+
+# Environment variables
+{% for key, value in shell_environment_vars.items() %}
+export {{ key }}="{{ value }}"
+{% endfor %}
+
+# Language manager initialization
+# NVM (Node Version Manager)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# PyEnv (Python Version Manager)
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+
+# Rustup (Rust)
+[ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+# Tool initialization
+{% for tool in shell_init_tools %}
+{% if tool == 'starship' %}
+# Starship prompt
+if command -v starship 1>/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+{% elif tool == 'zoxide' %}
+# Zoxide (smart cd)
+if command -v zoxide 1>/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
+{% elif tool == 'direnv' %}
+# Direnv (environment management)
+if command -v direnv 1>/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
+{% endif %}
+{% endfor %}
+
+# FZF integration (if available)
+if command -v fzf 1>/dev/null 2>&1; then
+  # Key bindings
+  [ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ] && source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+  # Completion
+  [ -f /opt/homebrew/opt/fzf/shell/completion.zsh ] && source /opt/homebrew/opt/fzf/shell/completion.zsh
+fi
+
+# Aliases
+{% for alias, command in shell_aliases.items() %}
+alias {{ alias }}="{{ command }}"
+{% endfor %}
+
+# Sheldon plugin manager (if available)
+if command -v sheldon 1>/dev/null 2>&1; then
+  eval "$(sheldon source)"
+fi
+
+# Source aliases if they exist
+[ -f ~/.zsh_aliases ] && source ~/.zsh_aliases

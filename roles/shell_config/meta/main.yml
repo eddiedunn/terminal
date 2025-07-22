@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: shell_config
+  author: O'Reilly Auto
+  description: Manage shell configuration, PATH, and environment variables
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - terminal
+    - shell
+    - configuration
+    - environment
+    - zsh
+    - bash
+
+dependencies: []

@@ -1,7 +1,0 @@
-# Ansible managed: {{ ansible_managed }}
-# Initialization for SDKMAN!
-
-export SDKMAN_DIR="{{ sdkman_install_dir }}"
-if [ -s "${SDKMAN_DIR}/bin/sdkman-init.sh" ]; then
-  source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-fi

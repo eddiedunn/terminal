@@ -1,0 +1,94 @@
+---
+# Shell configuration with sane defaults
+# Manages PATH, environment variables, tool initialization, and default configs
+
+# Shells to configure
+shell_config_shells:
+  - zsh
+  - bash
+
+# Environment variables (sane defaults)
+shell_environment_vars:
+  # Language manager paths
+  GOROOT: "{{ ansible_env.HOME }}/.local/go"
+  PYENV_ROOT: "{{ ansible_env.HOME }}/.pyenv"
+  
+  # Development environment  
+  DOCKER_HOST: "unix://{{ ansible_env.HOME }}/.colima/default/docker.sock"
+  VAULT_ADDR: "http://localhost:8200"
+  PASSWORD_STORE_DIR: "{{ ansible_env.HOME }}/.password-store"
+  ANSIBLE_VAULT_PASSWORD_FILE: "~/.config/.vault_password"
+  
+  # Tool configuration
+  FZF_DEFAULT_OPTS: "--height 40% --layout=reverse --border"
+  VIRTUAL_ENV_DISABLE_PROMPT: "1"  # Let starship handle this
+  EDITOR: "vim"
+  PAGER: "less -R"
+  
+  # macOS specific
+  OBJC_DISABLE_INITIALIZE_FORK_SAFETY: "YES"
+  
+  # PostgreSQL (Homebrew)
+  LDFLAGS: "-L/opt/homebrew/opt/libpq/lib"
+  CPPFLAGS: "-I/opt/homebrew/opt/libpq/include"
+  PKG_CONFIG_PATH: "/opt/homebrew/opt/libpq/lib/pkgconfig"
+
+# PATH additions (in order of precedence)
+shell_path_additions:
+  - "$HOME/.local/bin"
+  - "$HOME/.local/go/bin"
+  - "$HOME/.cargo/bin"
+  - "$PYENV_ROOT/bin"
+
+# Tools that need initialization
+shell_init_tools:
+  - starship
+  - zoxide
+  - direnv
+
+# Productivity aliases
+shell_aliases:
+  # Ansible shortcuts
+  ap: "ansible-playbook"
+  av: "ansible-vault"
+  
+  # Common shortcuts
+  c: "clear"
+  l: "eza"
+  ll: "eza -la --git"
+  tree: "eza --tree"
+  
+  # Git shortcuts
+  gs: "git status"
+  ga: "git add"
+  gc: "git commit"
+  gp: "git push"
+  gl: "git log --oneline"
+
+# Default git configuration
+git_config:
+  user:
+    name: "{{ ansible_user_id }}"
+    email: "{{ ansible_user_id }}@oreillyauto.com"
+  core:
+    editor: "vim"
+    autocrlf: "input"
+  pull:
+    rebase: "false"
+  init:
+    defaultBranch: "main"
+
+# Default starship configuration
+starship_config:
+  format: "$all$character"
+  add_newline: true
+  character:
+    success_symbol: "[➜](bold green)"
+    error_symbol: "[➜](bold red)"
+
+# Default sheldon plugins
+sheldon_plugins:
+  zsh-autosuggestions:
+    github: "zsh-users/zsh-autosuggestions"
+  zsh-syntax-highlighting:
+    github: "zsh-users/zsh-syntax-highlighting"

@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  role_name: basic_tools
+  author: O'Reilly Auto
+  description: Install basic terminal productivity tools via Homebrew
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - terminal
+    - homebrew
+    - productivity
+    - tools
+
+dependencies: []

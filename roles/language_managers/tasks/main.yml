@@ -1,0 +1,109 @@
+---
+- name: "Language Managers | Display installation info"
+  ansible.builtin.debug:
+    msg: |
+      Installing language managers via official installers:
+      {% for manager in language_managers %}
+      - {{ manager.name }}: {{ manager.method }}
+        URL: {{ manager.url | default('N/A') }}
+      {% endfor %}
+
+- name: "Language Managers | Set architecture fact"
+  ansible.builtin.set_fact:
+    ansible_architecture_normalized: "{{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'x86_64' }}"
+
+# NVM (Node Version Manager)
+- name: "Language Managers | Install NVM"
+  ansible.builtin.shell: |
+    curl -o- {{ (language_managers | selectattr('name', 'equalto', 'nvm') | first).url }} | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+  when: "'nvm' in (language_managers | map(attribute='name') | list)"
+
+# PyEnv (Python Version Manager)
+- name: "Language Managers | Install PyEnv"
+  ansible.builtin.shell: |
+    curl {{ (language_managers | selectattr('name', 'equalto', 'pyenv') | first).url }} | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.pyenv/bin/pyenv"
+  when: "'pyenv' in (language_managers | map(attribute='name') | list)"
+
+# Rustup (Rust Toolchain Manager)
+- name: "Language Managers | Install Rustup"
+  ansible.builtin.shell: |
+    curl --proto '=https' --tlsv1.2 -sSf {{ (language_managers | selectattr('name', 'equalto', 'rustup') | first).url }} | sh -s -- -y
+  args:
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+  when: "'rustup' in (language_managers | map(attribute='name') | list)"
+
+# SDKMAN (Java/JVM Ecosystem Manager)
+- name: "Language Managers | Install SDKMAN"
+  ansible.builtin.shell: |
+    curl -s "{{ (language_managers | selectattr('name', 'equalto', 'sdkman') | first).url }}" | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.sdkman/bin/sdkman-init.sh"
+  when: "'sdkman' in (language_managers | map(attribute='name') | list)"
+
+# Go - Automated installation
+- name: "Language Managers | Set Go variables"
+  ansible.builtin.set_fact:
+    go_version: "{{ (language_managers | selectattr('name', 'equalto', 'go') | first).version }}"
+    go_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+  when: "'go' in (language_managers | map(attribute='name') | list)"
+
+- name: "Language Managers | Set Go download URL"
+  ansible.builtin.set_fact:
+    go_download_url: "https://golang.org/dl/go{{ go_version }}.darwin-{{ go_arch }}.tar.gz"
+  when: "'go' in (language_managers | map(attribute='name') | list)"
+
+- name: "Language Managers | Check if Go is already installed"
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.local/go/bin/go"
+  register: go_binary_check
+  when: "'go' in (language_managers | map(attribute='name') | list)"
+
+- name: "Language Managers | Download Go"
+  ansible.builtin.shell: |
+    curl -L "{{ go_download_url }}" -o "/tmp/go{{ go_version }}.tar.gz"
+  args:
+    creates: "/tmp/go{{ go_version }}.tar.gz"
+  when: 
+    - "'go' in (language_managers | map(attribute='name') | list)"
+    - not go_binary_check.stat.exists
+
+- name: "Language Managers | Ensure .local directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local"
+    state: directory
+    mode: '0755'
+  when: "'go' in (language_managers | map(attribute='name') | list)"
+
+- name: "Language Managers | Remove existing Go installation"
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/go"
+    state: absent
+  when: 
+    - "'go' in (language_managers | map(attribute='name') | list)"
+    - not go_binary_check.stat.exists
+
+- name: "Language Managers | Extract and install Go"
+  ansible.builtin.unarchive:
+    src: "/tmp/go{{ go_version }}.tar.gz"
+    dest: "{{ ansible_env.HOME }}/.local"
+    remote_src: true
+    creates: "{{ ansible_env.HOME }}/.local/go/bin/go"
+  when: 
+    - "'go' in (language_managers | map(attribute='name') | list)"
+    - not go_binary_check.stat.exists
+
+- name: "Language Managers | Clean up Go download"
+  ansible.builtin.file:
+    path: "/tmp/go{{ go_version }}.tar.gz"
+    state: absent
+  when: 
+    - "'go' in (language_managers | map(attribute='name') | list)"
+    - not go_binary_check.stat.exists
+
+- name: "Language Managers | Verify installations"
+  ansible.builtin.debug:
+    msg: "Language managers installed successfully. Shell configuration will handle initialization."

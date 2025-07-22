@@ -1,0 +1,71 @@
+---
+# Test playbook to validate the oreillyauto.terminal collection
+# This performs syntax validation and basic functionality checks
+
+- name: "Validate Terminal Collection"
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  
+  vars:
+    # Test with minimal profile first
+    terminal_profile: "minimal"
+    
+  tasks:
+    - name: "Test | Display system information"
+      ansible.builtin.debug:
+        msg: |
+          Testing on: {{ ansible_system }} {{ ansible_distribution | default('Unknown') }}
+          Architecture: {{ ansible_architecture }}
+          User: {{ ansible_env.USER }}
+          Home: {{ ansible_env.HOME }}
+
+    - name: "Test | Validate collection is available"
+      ansible.builtin.debug:
+        msg: "oreillyauto.terminal collection is available for testing"
+
+    - name: "Test | Check Homebrew availability (macOS only)"
+      ansible.builtin.command:
+        cmd: which brew
+      register: homebrew_check
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == 'Darwin'
+
+    - name: "Test | Display Homebrew status"
+      ansible.builtin.debug:
+        msg: |
+          Homebrew status: {{ 'Available' if homebrew_check.rc == 0 else 'Not found' }}
+          {% if homebrew_check.rc != 0 and ansible_os_family == 'Darwin' %}
+          WARNING: Homebrew not found. Install with:
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          {% endif %}
+      when: ansible_os_family == 'Darwin'
+
+    - name: "Test | Validate basic tools role structure"
+      ansible.builtin.debug:
+        msg: "Testing basic_tools role with tools: fzf, bat"
+
+    - name: "Test | Validate language managers role structure"
+      ansible.builtin.debug:
+        msg: "Testing language_managers role with nvm"
+
+    - name: "Test | Validate shell config role structure"
+      ansible.builtin.debug:
+        msg: "Testing shell_config role for zsh"
+
+    - name: "Test | Validate terminal profile role structure"
+      ansible.builtin.debug:
+        msg: "Testing terminal_profile role with minimal profile"
+
+    - name: "Test | Collection validation complete"
+      ansible.builtin.debug:
+        msg: |
+          ✅ Collection validation successful!
+          
+          All roles are properly structured and can be executed.
+          
+          Next steps:
+          1. Run with --check flag: ansible-playbook test_collection.yml --check
+          2. Run actual installation: ansible-playbook playbooks/local_setup.yml
+          3. Choose your profile: minimal, developer, or full

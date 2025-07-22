@@ -1,0 +1,89 @@
+---
+- name: "Shell Config | Display configuration scope"
+  ansible.builtin.debug:
+    msg: |
+      Configuring shell environment:
+      - Shells: {{ shell_config_shells | join(', ') }}
+      - PATH additions: {{ shell_path_additions | join(', ') }}
+      - Init tools: {{ shell_init_tools | join(', ') }}
+      - Aliases: {{ shell_aliases.keys() | list | join(', ') }}
+
+- name: "Shell Config | Ensure config directories exist"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_env.HOME }}/.config"
+    - "{{ ansible_env.HOME }}/.config/sheldon"
+
+- name: "Shell Config | Configure git user name"
+  community.general.git_config:
+    name: "user.name"
+    value: "{{ git_config.user.name }}"
+    scope: global
+
+- name: "Shell Config | Configure git user email"
+  community.general.git_config:
+    name: "user.email"
+    value: "{{ git_config.user.email }}"
+    scope: global
+
+- name: "Shell Config | Create starship configuration"
+  ansible.builtin.copy:
+    content: |
+      # Starship configuration
+      format = "$all$character"
+      
+      [character]
+      success_symbol = "[➜](bold green)"
+      error_symbol = "[➜](bold red)"
+    dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    mode: '0644'
+    backup: true
+
+- name: "Shell Config | Create sheldon plugins configuration"
+  ansible.builtin.copy:
+    content: |
+      # Sheldon plugins configuration
+      shell = "zsh"
+      
+      [plugins.zsh-autosuggestions]
+      github = "zsh-users/zsh-autosuggestions"
+      
+      [plugins.zsh-syntax-highlighting]
+      github = "zsh-users/zsh-syntax-highlighting"
+    dest: "{{ ansible_env.HOME }}/.config/sheldon/plugins.toml"
+    mode: '0644'
+    backup: true
+
+- name: "Shell Config | Add terminal tools initialization to zsh"
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED TERMINAL TOOLS"
+    block: "{{ lookup('template', 'zsh_init.j2') }}"
+    create: true
+    mode: '0644'
+    backup: true
+  when: "'zsh' in shell_config_shells"
+
+- name: "Shell Config | Add terminal tools initialization to bash"
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED TERMINAL TOOLS"
+    block: "{{ lookup('template', 'bash_init.j2') }}"
+    create: true
+    mode: '0644'
+    backup: true
+  when: "'bash' in shell_config_shells"
+
+- name: "Shell Config | Display configuration summary"
+  ansible.builtin.debug:
+    msg: |
+      Shell configuration completed:
+      - Git configured with user: {{ git_config.user.name }} <{{ git_config.user.email }}>
+      - Starship config: ~/.config/starship.toml
+      - Sheldon plugins: ~/.config/sheldon/plugins.toml
+      - Shell initialization added to: {{ shell_config_shells | join(', ') }}
+      
+      Restart your shell or run 'source ~/.zshrc' to apply changes.

@@ -1,0 +1,43 @@
+---
+# Language environment managers installed via their official installers
+# This ensures we get the latest features and proper support
+
+language_managers:
+  - name: nvm
+    description: "Node.js version manager"
+    install_method: "curl"
+    install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh"
+    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+    
+  - name: pyenv
+    description: "Python version manager"
+    install_method: "curl"
+    install_url: "https://pyenv.run"
+    creates: "{{ ansible_env.HOME }}/.pyenv/bin/pyenv"
+    
+  - name: rustup
+    description: "Rust toolchain manager"
+    install_method: "curl"
+    install_url: "https://sh.rustup.rs"
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+    install_args: "-y"
+    
+  - name: go
+    description: "Go programming language"
+    install_method: "automated"
+    version: "1.21.5"
+    download_url_template: "https://golang.org/dl/go{version}.darwin-{arch}.tar.gz"
+    install_path: "{{ ansible_env.HOME }}/.local"
+    creates: "{{ ansible_env.HOME }}/.local/go/bin/go"
+    
+  - name: sdkman
+    description: "Java/JVM ecosystem manager"
+    install_method: "curl"
+    install_url: "https://get.sdkman.io"
+    creates: "{{ ansible_env.HOME }}/.sdkman/bin/sdkman-init.sh"
+
+# Architecture mapping for Go downloads
+go_arch_mapping:
+  aarch64: "arm64"
+  arm64: "arm64"
+  x86_64: "amd64"

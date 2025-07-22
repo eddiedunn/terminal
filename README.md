@@ -1,257 +1,254 @@
-# Terminal Ansible Collection
+# O'Reilly Auto Terminal Collection
 
-A modular Ansible collection to configure a modern, cross-platform terminal environment with your favorite userland tools, dotfiles, and developer shell workflows.
+A comprehensive Ansible collection for setting up and managing terminal environments on macOS and Linux systems. This collection provides a clean, modular approach to installing terminal productivity tools, language managers, and shell configurations.
 
 ## Features
 
-- **Declarative Tool Management**: Define your desired tools and versions in a single YAML file.
-- **Controller-Side Artifact Cache**: Binaries are downloaded and verified once on the controller, enabling fast, reproducible, and offline-capable deployments to multiple hosts.
-- **Cross-Platform**: Natively supports Linux (Debian/Ubuntu) and macOS (aarch64/x86_64).
-- **Robust Shell Integration**: Idempotently manages shell initialization scripts, completions, and environment variables without mangling user `.*rc` files.
-- **Extensible**: Easily add new tools, completions, or even entire installation roles (like `nvm` or `pyenv`).
-- **Orchestrated Profiles**: The `profile` role acts as a simple, high-level interface to compose your perfect terminal environment.
+- **Hybrid Installation Approach**: Uses Homebrew for basic tools and official installers for language managers
+- **Modular Design**: Separate roles for different concerns (tools, languages, shell config, scripts)
+- **Profile-Based Setup**: Predefined profiles (minimal, developer, full) for different use cases
+- **Smart Shell Configuration**: Manages PATH, environment variables, and tool initialization
+- **Script Repository Management**: Clone and link personal/team script repositories
+- **Cross-Platform Support**: Works on macOS (Darwin) and Linux systems
+- **Idempotent Operations**: Safe to run multiple times without side effects
 
----
+## Quick Start
 
-## Requirements
+1. **Install the collection:**
+   ```bash
+   ansible-galaxy collection install oreillyauto.terminal
+   ```
 
-> **IMPORTANT:**
-> - You must have Python (3.8+) installed _before_ running any playbooks. Ansible itself requires Python, and so do all supporting scripts.
-> - All required Python dependencies (e.g., `pyyaml`, `requests`, and Ansible itself) must be installed in your environment before running any playbooks. The playbooks will **not** attempt to install Python or any Python dependencies for you.
-> - It is recommended to use a Python virtual environment in your project root (e.g., `.venv` in the repo root) and install dependencies with `pip install -r requirements.txt`.
+2. **Run a simple setup:**
+   ```bash
+   ansible-playbook -i localhost, oreillyauto.terminal.local_setup
+   ```
 
-## Quick Start (Local Setup)
+## Architecture
 
-This playbook will configure the terminal for the current user on your local machine.
+### Roles
 
-1.  **Prerequisites**: Ensure you have Python, `pip`, and `venv` installed.
-2.  **Clone the Repository**:
-    ```sh
-    git clone https://github.com/eddiedunn/terminal.git
-    cd terminal
-    ```
-3.  **Set up the Environment**:
-    ```sh
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
-    ```
-4.  **Run the Local Setup Playbook**:
-    ```sh
-    ansible-playbook playbooks/local_setup.yml
-    ```
-    This command will automatically:
-    - Build and install the collection locally.
-    - Run the `download_helper.py` script to stage all necessary binaries.
-    - Execute the Ansible playbook to configure your system.
+- **`basic_tools`**: Installs terminal productivity tools via Homebrew
+- **`language_managers`**: Installs language version managers via official installers
+- **`shell_config`**: Manages shell configuration, PATH, and environment variables
+- **`script_repos`**: Clones git repositories and symlinks scripts to `~/.local/bin`
+- **`terminal_profile`**: Orchestrator role that combines other roles based on profiles
 
----
+### Installation Methods
 
-## Architecture Overview
+- **Homebrew Tools**: fzf, bat, eza, zoxide, direnv, uv, starship, sheldon, ripgrep, kubectl, jenkins-cli, gh, gcloud
+- **Official Installers**: nvm, pyenv, rustup, sdkman (via curl scripts)
+- **Archive Downloads**: Go (automated download and extraction)
 
-This collection is designed with a clear separation of concerns:
+## Profiles
 
-1.  **Artifact Staging (Controller)**: The `download_helper.py` script is executed first on the Ansible controller. It reads tool definitions from `roles/tool_installer/defaults/main.yml` and `roles/tool_installer/files/completions_metadata.yml`, downloads all required binaries and completion scripts, verifies their checksums, and places them into an artifact cache (default: `/tmp/terminal-ansible-artifacts`). This makes subsequent runs fast and enables offline provisioning.
+### Minimal Profile
+Basic terminal tools only, no shell configuration:
+- fzf, bat, eza, ripgrep
 
-2.  **Orchestration (`profile` role)**: This is the main entry point. It orchestrates other roles based on the tools you've defined in the `profile_tools` variable.
+### Developer Profile (Default)
+Full development environment with language managers:
+- All basic tools plus zoxide, direnv, uv, starship, sheldon, kubectl, jenkins-cli, gh, gcloud
+- Language managers: nvm, pyenv, rustup, go, sdkman
+- Shell configuration enabled
 
-3.  **Core Engines (`tool_installer`, `nvm`, etc.)**:
-    - `tool_installer`: Copies pre-staged binaries and completions from the controller's cache to the target machine. It also deploys shell initialization snippets.
-    - `env_chassis`: Prepares user directories, dotfiles, and configures the shell to source initialization snippets.
-    - `system_dependencies`: Installs system-level packages (e.g., `build-essential`) required by other roles.
-    - `nvm`, `pyenv`, `rustup`: Handle tools that require script-based git checkouts and have their own initialization logic.
+### Full Profile
+Complete setup including script repository management:
+- Everything from developer profile
+- Script repository cloning and linking enabled
 
----
+## Usage Examples
 
-## Customization
-
-To customize your setup, edit `playbooks/local_setup.yml` (or your own playbook) and modify the `vars` section:
+### Basic Usage
 
 ```yaml
-# playbooks/local_setup.yml
-- name: Setup Local Terminal Environment
+- name: "Setup Terminal Environment"
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: "Setup developer profile"
+      ansible.builtin.include_role:
+        name: oreillyauto.terminal.terminal_profile
+      vars:
+        terminal_profile: "developer"
+```
+
+### Custom Profile
+
+```yaml
+- name: "Custom Terminal Setup"
   hosts: localhost
   connection: local
   vars:
-    # 1. Define which tools you want to install
-    profile_tools:
-      - starship
-      - sheldon
-      - fzf
-      - bat
-      - eza
-      - ripgrep
-      - zoxide
-      - direnv
-      - nvm  # Example of a script-based installer
-
-    # 2. Define which shells to configure
-    profile_shells:
-      - bash
-      - zsh
-
-    # 3. Add custom aliases and environment variables
-    profile_custom_aliases:
-      k: "kubectl"
-      l: "eza -l"
-    profile_environment_variables:
-      EDITOR: "nvim"
-      # ...
+    terminal_profile: "developer"
+    terminal_profile_custom_basic_tools:
+      - "htop"
+      - "tree"
+    terminal_profile_custom_language_managers:
+      - name: "rbenv"
+        method: "curl"
+        url: "https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer"
+  tasks:
+    - name: "Setup custom profile"
+      ansible.builtin.include_role:
+        name: oreillyauto.terminal.terminal_profile
 ```
 
----
+### Individual Role Usage
 
-## For Developers & Contributors
+```yaml
+- name: "Install Basic Tools Only"
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: "Install terminal tools"
+      ansible.builtin.include_role:
+        name: oreillyauto.terminal.basic_tools
+      vars:
+        basic_tools_list:
+          - "fzf"
+          - "bat"
+          - "eza"
+```
 
-### Development Workflow
+## Shell Configuration
 
-This collection is part of the `gaia-infra-platform` monorepo and relies on the central Ansible configuration located at `ansible/ansible.cfg`. This file ensures that the local, in-development version of the collection is used instead of one that might be installed globally.
+The collection manages shell configuration through templated initialization blocks that are added to your `.zshrc` and `.bashrc` files. This includes:
 
-**Therefore, all `ansible-playbook` commands must be run from the `ansible/` directory.**
+### PATH Management
+- Homebrew paths (`/opt/homebrew/bin`, `/usr/local/bin`)
+- Local user paths (`~/.local/bin`, `~/.cargo/bin`)
+- Language manager paths (pyenv, go, etc.)
 
-For example, to run the `local_setup.yml` playbook from the repository root, you would do the following:
+### Environment Variables
+- `GOROOT`, `PYENV_ROOT`
+- `DOCKER_HOST`, `VAULT_ADDR`
+- `FZF_DEFAULT_OPTS`, `EDITOR`, `PAGER`
+- And more sane defaults
+
+### Tool Initialization
+- Starship prompt: `eval "$(starship init zsh)"`
+- Zoxide: `eval "$(zoxide init zsh)"`
+- Direnv: `eval "$(direnv hook zsh)"`
+- Language managers (nvm, pyenv, rustup, sdkman)
+
+### Default Configurations
+- Git user configuration
+- Starship prompt configuration (starship.toml)
+- Sheldon plugin manager configuration (plugins.toml)
+
+## Script Repository Management
+
+Configure git repositories containing scripts to be cloned and linked:
+
+```yaml
+script_repositories:
+  - name: "personal_scripts"
+    repo: "git@github.com:user/scripts.git"
+    path_in_repo: "bin"          # Subdirectory containing executables
+    version: "main"              # Branch/tag/commit
+    dest: "~/.local/src/personal_scripts"
+```
+
+Scripts are automatically symlinked to `~/.local/bin` and become available in your PATH.
+
+## Requirements
+
+- **Ansible**: 2.15 or higher
+- **Collections**: `community.general`
+- **macOS**: Homebrew must be installed
+- **Linux**: Package manager support varies by distribution
+
+## Installation
+
+### From Ansible Galaxy
 
 ```bash
-# Navigate to the ansible root directory from the project root
-cd ansible
-
-# Run the playbook
-ansible-playbook collections/ansible_collections/eddiedunn/terminal/playbooks/local_setup.yml
+ansible-galaxy collection install oreillyauto.terminal
 ```
 
-This is the standard and required workflow for all development and testing within this project.
+### From Source
 
-- **Testing**: Each role includes a `molecule` scenario for independent testing.
-  ```sh
-  # Activate venv first!
-  source .venv/bin/activate
-  # Test a specific role
-  cd roles/tool_installer
-  molecule test
-  ```
-- **Binary Management**: For details on how binaries, checksums, and completions are managed, see `roles/tool_installer/README.md`.
-- **Linting**: Run all linters with the helper script:
-  ```sh
-  ./scripts/lint_all.sh
-  ```
-
----
-
-### A Note on `eza` for macOS
-
-The official `eza` project does not currently distribute pre-built binaries for Darwin (macOS). To provide a seamless out-of-the-box experience, this collection uses a public fork ([eddiedunn/eza](https://github.com/eddiedunn/eza)) that builds and releases these binaries. The source and build process are fully transparent. Should the official project begin publishing Darwin binaries, this collection will be updated to use them.
-
-
-
-For advanced usage and details, see the `docs/` directory and each role's README.md.
-
-
-**IMPORTANT: Activate the Python Virtual Environment Before Running Any Commands!**
-
-Before running any Python, Ansible, or Molecule commands in this project, you MUST activate the virtual environment:
-
-```sh
-source .venv/bin/activate
+```bash
+git clone https://github.com/oreillyauto/ansible-terminal-collection.git
+cd ansible-terminal-collection
+ansible-galaxy collection build
+ansible-galaxy collection install oreillyauto-terminal-*.tar.gz
 ```
 
-This is required for all development, testing, and CI. If you skip this step, commands like `ansible-lint`, `molecule`, and `ansible-playbook` will fail or use the wrong dependencies.
+## Customization
 
----
+### Adding Custom Tools
 
-## Project Structure
-- Modular Ansible roles: `env_chassis`, `tool_installer`, `nvm`, `pyenv`, `rustup`, `profile`
-- Collection metadata: `galaxy.yml`, `.gitignore`
+Extend profiles with additional tools:
 
----
+```yaml
+terminal_profile_custom_basic_tools:
+  - "htop"
+  - "tree"
+  - "jq"
+```
 
-## Binary Management Philosophy & eza Darwin Binaries
+### Custom Shell Configuration
 
-This project includes pre-built binaries for several tools to ensure reproducible, offline, and cross-platform automation. One notable case is the inclusion of a Darwin (macOS) binary for [`eza`](https://github.com/eza-community/eza), a modern replacement for `ls`.
+Override default shell settings:
 
-### Why a Custom Fork for eza?
-The official `eza-community/eza` project does **not** distribute pre-built Darwin/macOS binaries. To provide a seamless experience for macOS users, this project uses a custom fork ([eddiedunn/eza](https://github.com/eddiedunn/eza)) to build and distribute the required Darwin binaries.
+```yaml
+shell_aliases:
+  ll: "eza -la --git"
+  cat: "bat"
+  find: "fd"
 
-- **Transparency:** The source and build process for these binaries are publicly available. Users are encouraged to review the [eddiedunn/eza](https://github.com/eddiedunn/eza) fork and compare it with the official [eza-community/eza](https://github.com/eza-community/eza).
-- **Rebuilding:** If you prefer to build your own binaries, you can do so by following the instructions in the fork or the official repo, then replacing the binary in the appropriate files directory.
-- **Security & Trust:** This approach is documented here to ensure transparency. If/when the official project begins distributing Darwin binaries, this project will switch to using those official releases.
+shell_environment_vars:
+  EDITOR: "nvim"
+  PAGER: "less -R"
+```
 
-For details on how binaries and completions are managed, see `BINARY_MANAGEMENT.md`, `COMPLETIONS_WORKFLOW.md`, and the helper automation scripts included in the repository.
+### Custom Language Managers
 
+Add additional language managers:
 
-## Using This Collection in Your Ansible Project
+```yaml
+terminal_profile_custom_language_managers:
+  - name: "rbenv"
+    method: "curl"
+    url: "https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer"
+```
 
-To include this collection in your own Ansible repository:
+## Troubleshooting
 
-1. **Add to `collections/requirements.yml`:**
+### PATH Issues
+If tools aren't found after installation:
+```bash
+source ~/.zshrc  # or ~/.bashrc
+```
 
-   ```yaml
-   ---
-   collections:
-     - name: <your_namespace>.terminal
-       source: <path or URL to this collection>
-   ```
+### Homebrew Not Found
+Ensure Homebrew is installed:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
 
-   - If using locally, set `source` to the relative or absolute path.
-   - **To install directly from this repository (development or private use):**
-     1. Clone the repository:
-        ```sh
-        git clone https://github.com/eddiedunn/terminal.git
-        ```
-     2. Build and install the collection:
-        ```sh
-        ansible-galaxy collection build terminal
-        ansible-galaxy collection install eddiedunn-terminal-*.tar.gz
-        ```
-   - **To install directly from git (if using Ansible 2.10+):**
-     ```sh
-     ansible-galaxy collection install git+https://github.com/eddiedunn/terminal.git
-     ```
-     > **Note:** This method cannot be used in `collections/requirements.yml` unless the repo is structured and tagged for Galaxy.
-   - **If publishing to Ansible Galaxy:**
-     Publish the collection, then users can add to `collections/requirements.yml`:
-     ```yaml
-     collections:
-       - name: eddiedunn.terminal
-     ```
-     and install with:
-     ```sh
-     ansible-galaxy collection install -r collections/requirements.yml
-     ```
-## ⚡ Local Collection Development Best Practices
+### Language Manager Issues
+Language managers install to user directories and may require shell restart:
+```bash
+exec $SHELL -l
+```
 
-**1. Always run playbooks from the project root**
-- Do not run playbooks from inside the collection directory. This ensures Ansible resolves roles and collections using the correct local paths.
-2. **Install the collection:**
+## Contributing
 
-   ```sh
-   ansible-galaxy collection install -r collections/requirements.yml
-   ```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-3. **Reference roles from the collection in your playbooks:**
+## License
 
-   ```yaml
-   - hosts: all
-     roles:
-       - role: <your_namespace>.terminal.
-   ```
+MIT License - see LICENSE file for details.
 
-Replace `<your_namespace>` with the actual namespace (e.g., `eddiedunn`).
+## Support
 
-3. Stage all required binaries and completions by running:
-   ```sh
-   python3 roles//scripts/download_helper.py roles/
-   ```
-   This will read `defaults/main.yml` and `files/completions_metadata.yml`, download all binaries, and stage completions for all supported shells.
-   - As of the current implementation, for zoxide, any 'eval' lines are stripped from the generated zoxide.zsh completion file to avoid double initialization.
-   ```
-3. Run molecule/ansible/pytest commands as needed (with the venv activated)
-
----
-
-## Reference: Source Role
-- Role name: `terminal_setup`
-- Path: `<path_to_repo>/ansible/roles/terminal_setup`
-
----
-
-**Always activate the environment!**
+- GitHub Issues: [Report bugs and feature requests](https://github.com/oreillyauto/ansible-terminal-collection/issues)
+- Documentation: This README and role-specific documentation
+- Examples: See `playbooks/` directory for usage examples

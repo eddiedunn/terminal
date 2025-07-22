@@ -1,0 +1,18 @@
+---
+# Git repositories containing scripts to link into ~/.local/bin
+# This allows for version-controlled script management and team sharing
+
+script_repositories: []
+# Example configuration:
+# script_repositories:
+#   - name: "personal_scripts"
+#     repo: "git@github.com:user/scripts.git"
+#     path_in_repo: "bin"          # Subdirectory containing executables
+#     version: "main"              # Branch/tag/commit
+#     dest: "{{ ansible_env.HOME }}/.local/src/personal_scripts"
+
+# Default destination for cloned repositories
+script_repos_base_dir: "{{ ansible_env.HOME }}/.local/src"
+
+# Directory where scripts will be symlinked
+script_repos_bin_dir: "{{ ansible_env.HOME }}/.local/bin"

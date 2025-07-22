@@ -1,0 +1,99 @@
+---
+# Terminal Profile - Orchestrator role that combines all terminal setup components
+# This role provides different profiles for various use cases
+
+# Available profiles: minimal, developer, full
+terminal_profile: "developer"
+
+# Profile definitions
+terminal_profiles:
+  minimal:
+    description: "Basic terminal tools only"
+    basic_tools:
+      - "fzf"
+      - "bat" 
+      - "eza"
+      - "ripgrep"
+    language_managers: []
+    shell_config_enabled: false
+    script_repos_enabled: false
+
+  developer:
+    description: "Full development environment with language managers"
+    basic_tools:
+      - "fzf"
+      - "bat"
+      - "eza" 
+      - "zoxide"
+      - "direnv"
+      - "uv"
+      - "starship"
+      - "sheldon"
+      - "ripgrep"
+      - "kubectl"
+      - "jenkins-cli"
+      - "gh"
+      - "gcloud"
+    language_managers:
+      - name: "nvm"
+        method: "curl"
+        url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh"
+      - name: "pyenv"
+        method: "curl"
+        url: "https://pyenv.run/"
+      - name: "rustup"
+        method: "curl"
+        url: "https://sh.rustup.rs"
+      - name: "go"
+        method: "archive"
+        version: "1.21.3"
+        architecture_mapping:
+          x86_64: "amd64"
+          arm64: "arm64"
+      - name: "sdkman"
+        method: "curl"
+        url: "https://get.sdkman.io"
+    shell_config_enabled: true
+    script_repos_enabled: false
+
+  full:
+    description: "Complete setup including script repositories"
+    basic_tools:
+      - "fzf"
+      - "bat"
+      - "eza"
+      - "zoxide"
+      - "direnv"
+      - "uv"
+      - "starship"
+      - "sheldon"
+      - "ripgrep"
+      - "kubectl"
+      - "jenkins-cli"
+      - "gh"
+      - "gcloud"
+    language_managers:
+      - name: "nvm"
+        method: "curl"
+        url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh"
+      - name: "pyenv"
+        method: "curl"
+        url: "https://pyenv.run/"
+      - name: "rustup"
+        method: "curl"
+        url: "https://sh.rustup.rs"
+      - name: "go"
+        method: "archive"
+        version: "1.21.3"
+        architecture_mapping:
+          x86_64: "amd64"
+          arm64: "arm64"
+      - name: "sdkman"
+        method: "curl"
+        url: "https://get.sdkman.io"
+    shell_config_enabled: true
+    script_repos_enabled: true
+
+# Allow profile customization
+terminal_profile_custom_basic_tools: []
+terminal_profile_custom_language_managers: []

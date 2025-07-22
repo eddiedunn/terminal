@@ -1,0 +1,49 @@
+---
+- name: "Basic Tools | Display tools to be installed"
+  ansible.builtin.debug:
+    msg: "Installing basic terminal tools via Homebrew: {{ basic_tools_list | join(', ') }}"
+
+- name: "Basic Tools | Verify Homebrew is available"
+  ansible.builtin.command:
+    cmd: brew --version
+  register: homebrew_check
+  failed_when: homebrew_check.rc != 0
+  changed_when: false
+
+- name: "Basic Tools | Debug Homebrew mapping"
+  ansible.builtin.debug:
+    msg:
+      - "Tools to install: {{ basic_tools_list }}"
+      - "Homebrew mapping: {{ basic_tools_homebrew_mapping }}"
+      - "Tools with mappings: {{ basic_tools_homebrew_mapping.keys() | list }}"
+      - "Tools missing mappings: {{ basic_tools_list | difference(basic_tools_homebrew_mapping.keys()) }}"
+
+- name: "Basic Tools | Install tools via Homebrew"
+  community.general.homebrew:
+    name: "{{ basic_tools_homebrew_mapping[item] }}"
+    state: present
+  loop: "{{ basic_tools_list }}"
+  when: 
+    - ansible_os_family == 'Darwin'
+    - item in basic_tools_homebrew_mapping
+    - basic_tools_homebrew_mapping[item] is defined
+    - basic_tools_homebrew_mapping[item] != ''
+  loop_control:
+    label: "{{ item }} -> {{ basic_tools_homebrew_mapping[item] | default('NOT_MAPPED') }}"
+
+- name: "Basic Tools | Verify tool installation"
+  ansible.builtin.command:
+    cmd: "which {{ item }}"
+  register: tool_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ basic_tools_list }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: "Basic Tools | Display installation results"
+  ansible.builtin.debug:
+    msg: "{{ item.item }}: {{ '✅ installed' if item.rc == 0 else '❌ missing' }}"
+  loop: "{{ tool_check.results }}"
+  loop_control:
+    label: "{{ item.item }}"

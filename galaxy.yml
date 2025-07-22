@@ -1,29 +1,23 @@
-namespace: eddiedunn
+namespace: oreillyauto
 name: terminal
 version: 1.0.0
 readme: README.md
 authors:
-  - 'Ansible User <user@example.com>'
-description: >-
-  Modular Ansible collection to configure a modern, cross-platform terminal environment with userland tools, dotfiles, and developer shell workflows.
+  - gdunn6 <gdunn6@oreillyauto.com>
+description: A simple, hybrid approach to modern terminal environment setup
 license:
   - MIT
+license_file: ''
 tags:
-  - tools
   - terminal
-  - shell
-  - zsh
-  - bash
-  - starship
-  - sheldon
   - development
-  - dotfiles
+  - tools
+  - homebrew
+  - shell
+  - productivity
 dependencies: {}
-repository: 'https://github.com/example/terminal'
-homepage: 'https://github.com/example/terminal'
-issues: 'https://github.com/example/terminal/issues'
-build_ignore:
-  - .git
-  - .gitignore
-  - '*.tar.gz'
-  - 'molecule/'
+repository: https://bitbucket.org/oreillyauto/gdunn6_ansible
+documentation: https://bitbucket.org/oreillyauto/gdunn6_ansible
+homepage: https://bitbucket.org/oreillyauto/gdunn6_ansible
+issues: https://bitbucket.org/oreillyauto/gdunn6_ansible/issues
+build_ignore: []

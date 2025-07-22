@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: script_repos
+  author: O'Reilly Auto
+  description: Clone git repositories and symlink scripts to ~/.local/bin
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - terminal
+    - scripts
+    - git
+    - repositories
+    - symlinks
+
+dependencies: []

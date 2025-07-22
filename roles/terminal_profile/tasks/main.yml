@@ -1,0 +1,69 @@
+---
+- name: "Terminal Profile | Display selected profile"
+  ansible.builtin.debug:
+    msg: |
+      Setting up terminal profile: {{ terminal_profile }}
+      Description: {{ terminal_profiles[terminal_profile].description }}
+      Basic tools: {{ (terminal_profiles[terminal_profile].basic_tools + terminal_profile_custom_basic_tools) | unique | join(', ') }}
+      Language managers: {{ (terminal_profiles[terminal_profile].language_managers + terminal_profile_custom_language_managers) | map(attribute='name') | list | join(', ') }}
+      Shell config: {{ terminal_profiles[terminal_profile].shell_config_enabled }}
+      Script repos: {{ terminal_profiles[terminal_profile].script_repos_enabled }}
+
+- name: "Terminal Profile | Set profile variables"
+  ansible.builtin.set_fact:
+    profile_basic_tools: "{{ terminal_profiles[terminal_profile].basic_tools + terminal_profile_custom_basic_tools }}"
+    profile_language_managers: "{{ terminal_profiles[terminal_profile].language_managers + terminal_profile_custom_language_managers }}"
+    profile_shell_config_enabled: "{{ terminal_profiles[terminal_profile].shell_config_enabled }}"
+    profile_script_repos_enabled: "{{ terminal_profiles[terminal_profile].script_repos_enabled }}"
+
+- name: "Terminal Profile | Install basic tools"
+  ansible.builtin.include_role:
+    name: oreillyauto.terminal.basic_tools
+  vars:
+    basic_tools_list: "{{ profile_basic_tools }}"
+
+- name: "Terminal Profile | Install language managers"
+  ansible.builtin.include_role:
+    name: oreillyauto.terminal.language_managers
+  vars:
+    language_managers: "{{ profile_language_managers }}"
+  when: profile_language_managers | length > 0
+
+- name: "Terminal Profile | Configure shell environment"
+  ansible.builtin.include_role:
+    name: oreillyauto.terminal.shell_config
+  vars:
+    language_managers: "{{ profile_language_managers }}"
+  when: profile_shell_config_enabled
+
+- name: "Terminal Profile | Setup script repositories"
+  ansible.builtin.include_role:
+    name: oreillyauto.terminal.script_repos
+  when: profile_script_repos_enabled
+
+- name: "Terminal Profile | Display completion summary"
+  ansible.builtin.debug:
+    msg: |
+      Terminal profile '{{ terminal_profile }}' setup completed successfully!
+      
+      Installed tools:
+      {% for tool in profile_basic_tools %}
+      - {{ tool }}
+      {% endfor %}
+      
+      {% if profile_language_managers | length > 0 %}
+      Language managers:
+      {% for manager in profile_language_managers %}
+      - {{ manager.name }}
+      {% endfor %}
+      {% endif %}
+      
+      {% if profile_shell_config_enabled %}
+      Shell configuration has been applied. Restart your shell or run:
+      - source ~/.zshrc (for zsh)
+      - source ~/.bashrc (for bash)
+      {% endif %}
+      
+      {% if profile_script_repos_enabled %}
+      Script repositories have been configured.
+      {% endif %}

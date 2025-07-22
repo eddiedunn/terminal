@@ -1,0 +1,76 @@
+# {{ ansible_managed }}
+# Terminal tools initialization for bash
+
+# PATH additions
+{% for path in shell_path_additions %}
+export PATH="{{ path }}:$PATH"
+{% endfor %}
+
+# Environment variables
+{% for key, value in shell_environment_vars.items() %}
+export {{ key }}="{{ value }}"
+{% endfor %}
+
+# Language manager initialization
+{% if 'nvm' in (language_managers | default([]) | map(attribute='name') | list) %}
+# NVM (Node Version Manager)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+{% endif %}
+
+{% if 'pyenv' in (language_managers | default([]) | map(attribute='name') | list) %}
+# PyEnv (Python Version Manager)
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+{% endif %}
+
+{% if 'rustup' in (language_managers | default([]) | map(attribute='name') | list) %}
+# Rustup (Rust)
+[ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+{% endif %}
+
+{% if 'sdkman' in (language_managers | default([]) | map(attribute='name') | list) %}
+# SDKMAN (Java/JVM)
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+{% endif %}
+
+# Tool initialization
+{% for tool in shell_init_tools %}
+{% if tool == 'starship' %}
+# Starship prompt
+if command -v starship 1>/dev/null 2>&1; then
+  eval "$(starship init bash)"
+fi
+{% elif tool == 'zoxide' %}
+# Zoxide (smart cd)
+if command -v zoxide 1>/dev/null 2>&1; then
+  eval "$(zoxide init bash)"
+fi
+{% elif tool == 'direnv' %}
+# Direnv (environment management)
+if command -v direnv 1>/dev/null 2>&1; then
+  eval "$(direnv hook bash)"
+fi
+{% endif %}
+{% endfor %}
+
+# FZF integration (if available)
+if command -v fzf 1>/dev/null 2>&1; then
+  # Key bindings
+  [ -f /opt/homebrew/opt/fzf/shell/key-bindings.bash ] && source /opt/homebrew/opt/fzf/shell/key-bindings.bash
+  # Completion
+  [ -f /opt/homebrew/opt/fzf/shell/completion.bash ] && source /opt/homebrew/opt/fzf/shell/completion.bash
+fi
+
+# Aliases
+{% for alias, command in shell_aliases.items() %}
+alias {{ alias }}="{{ command }}"
+{% endfor %}
+
+# Sheldon plugin manager (if available)
+if command -v sheldon 1>/dev/null 2>&1; then
+  eval "$(sheldon source)"
+fi

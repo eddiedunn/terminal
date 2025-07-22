@@ -1,0 +1,14 @@
+---
+# Minimal terminal setup - basic tools only, no shell configuration
+- name: "Minimal Terminal Setup"
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  
+  vars:
+    terminal_profile: "minimal"
+    
+  tasks:
+    - name: "Setup minimal terminal profile"
+      ansible.builtin.include_role:
+        name: oreillyauto.terminal.terminal_profile
